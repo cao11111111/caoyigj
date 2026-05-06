@@ -1,20 +1,20 @@
 @import 'weapp-tailwindcss';
 
 :root, page, root-portal {
-  /* Primary Colors - Modern Indigo */
-  --color-primary: #6366f1;
-  --color-primary-light: #818cf8;
-  --color-primary-container: #eef2ff;
+  /* Primary Colors - Pure Blue */
+  --color-primary: #2563eb;
+  --color-primary-light: #3b82f6;
+  --color-primary-container: #eff6ff;
   --color-on-primary: #ffffff;
 
-  /* Secondary Colors - Purple Accent */
-  --color-secondary: #8b5cf6;
-  --color-secondary-container: #f5f3ff;
+  /* Secondary Colors - Blue Accent */
+  --color-secondary: #1d4ed8;
+  --color-secondary-container: #dbeafe;
 
   /* Background Colors */
   --color-background: #f8fafc;
   --color-surface: #ffffff;
-  --color-surface-elevated: rgba(255, 255, 255, 0.8);
+  --color-surface-elevated: rgba(255, 255, 255, 0.85);
   --color-surface-container: #f1f5f9;
   --color-surface-container-high: #e2e8f0;
 
@@ -25,19 +25,12 @@
   --color-outline-variant: #cbd5e1;
 
   /* Functional Colors */
-  --color-success: #22c55e;
-  --color-success-container: #dcfce7;
+  --color-success: #10b981;
+  --color-success-container: #d1fae5;
   --color-error: #ef4444;
   --color-error-container: #fef2f2;
   --color-warning: #f59e0b;
   --color-warning-container: #fef3c7;
-
-  /* Gradients */
-  --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  --gradient-secondary: linear-gradient(135deg, #8b5cf6 0%, #c084fc 100%);
-  --gradient-bg: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-  --gradient-card: linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.8) 100%);
-  --gradient-hero: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 
   /* Border Radius */
   --radius-sm: 8px;
@@ -52,8 +45,6 @@
   --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08);
   --shadow-float: 0 10px 40px rgba(0, 0, 0, 0.1);
-  --shadow-glow: 0 4px 24px rgba(99, 102, 241, 0.25);
-  --shadow-glow-lg: 0 8px 32px rgba(99, 102, 241, 0.35);
 
   /* Font Family */
   --font-sans: 'Noto Sans SC', system-ui, -apple-system, sans-serif;

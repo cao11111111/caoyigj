@@ -1,121 +1,79 @@
 import { View, Text } from '@tarojs/components'
+import { MessageSquare } from 'lucide-react-taro'
 import Taro from '@tarojs/taro'
-import { FileText, Code, CircleQuestionMark, ChartBarBig, MessageCircle, ChevronRight, Clock } from 'lucide-react-taro'
+import './index.config'
 
-interface Conversation {
-  id: string
+interface ChatItem {
+  id: number
   title: string
   preview: string
   time: string
-  messageCount: number
-  icon: typeof FileText
-  iconBg: string
-  dateGroup: string
+  count: number
 }
 
-const conversations: Conversation[] = [
-  {
-    id: '1',
-    title: '项目进度汇报',
-    preview: '帮我整理一下本周项目的完成情况和下周计划...',
-    time: '14:30',
-    messageCount: 12,
-    icon: FileText,
-    iconBg: 'bg-gradient-to-br from-indigo-100 to-indigo-50',
-    dateGroup: '今天'
-  },
-  {
-    id: '2',
-    title: '人事政策咨询',
-    preview: '请问年假是怎么计算的？',
-    time: '11:20',
-    messageCount: 5,
-    icon: CircleQuestionMark,
-    iconBg: 'bg-gradient-to-br from-green-100 to-emerald-50',
-    dateGroup: '今天'
-  },
-  {
-    id: '3',
-    title: '代码问题排查',
-    preview: '这段 Python 代码为什么运行报错？请帮我分析原因...',
-    time: '16:45',
-    messageCount: 8,
-    icon: Code,
-    iconBg: 'bg-gradient-to-br from-purple-100 to-purple-50',
-    dateGroup: '昨天'
-  },
-  {
-    id: '4',
-    title: '数据分析需求',
-    preview: '帮我生成上个月的销售数据报表...',
-    time: '10:30',
-    messageCount: 15,
-    icon: ChartBarBig,
-    iconBg: 'bg-gradient-to-br from-amber-100 to-orange-50',
-    dateGroup: '昨天'
-  },
-]
+interface ChatGroup {
+  title: string
+  chats: ChatItem[]
+}
 
 export default function History() {
-  const handleChat = () => {
-    Taro.navigateTo({ url: '/pages/chat/index' })
-  }
-
-  // Group conversations by date
-  const groupedData = conversations.reduce((acc, conv) => {
-    if (!acc[conv.dateGroup]) {
-      acc[conv.dateGroup] = []
+  const chatGroups: ChatGroup[] = [
+    {
+      title: '今天',
+      chats: [
+        { id: 1, title: '项目进度汇报模板', preview: '帮我生成一份项目进度汇报...', time: '14:30', count: 8 },
+        { id: 2, title: '代码审查建议', preview: '帮我看看这段代码有什么问题...', time: '11:20', count: 5 },
+      ]
+    },
+    {
+      title: '昨天',
+      chats: [
+        { id: 3, title: '周报总结', preview: '这周的周报应该怎么写...', time: '18:45', count: 12 },
+        { id: 4, title: '会议安排', preview: '帮我安排下周的团队会议...', time: '15:30', count: 3 },
+        { id: 5, title: '文档润色', preview: '帮我优化一下这份邮件...', time: '10:00', count: 6 },
+      ]
+    },
+    {
+      title: '更早',
+      chats: [
+        { id: 6, title: '竞品分析', preview: '分析一下我们的主要竞品...', time: '昨天', count: 15 },
+        { id: 7, title: '技术选型', preview: '新项目应该用什么技术栈...', time: '周一', count: 9 },
+      ]
     }
-    acc[conv.dateGroup].push(conv)
-    return acc
-  }, {} as Record<string, Conversation[]>)
+  ]
 
   return (
-    <View className="min-h-screen bg-gradient-to-b from-indigo-50 via-white to-slate-50 pb-[calc(3.5rem+env(safe-area-inset-bottom))]">
+    <View className="min-h-screen bg-slate-50 pb-20">
       {/* Header */}
-      <View className="px-5 pt-8 pb-4">
-        <View className="flex items-center gap-3">
-          <Clock size={24} color="#6366f1" />
-          <Text className="text-xl font-bold text-slate-800">对话历史</Text>
-        </View>
-        <Text className="block text-sm text-slate-500 mt-1">共 {conversations.length} 条对话记录</Text>
+      <View className="bg-white px-4 pt-12 pb-4 border-b border-slate-100">
+        <Text className="block text-slate-800 text-xl font-semibold">对话历史</Text>
       </View>
 
-      {/* Conversation List */}
-      <View className="px-5 space-y-6">
-        {Object.entries(groupedData).map(([dateGroup, items]) => (
-          <View key={dateGroup}>
-            <View className="flex items-center gap-2 mb-3">
-              <View className="w-2 h-2 rounded-full bg-indigo-400" />
-              <Text className="text-sm font-semibold text-slate-600">{dateGroup}</Text>
-            </View>
-            <View className="space-y-3">
-              {items.map((conv) => (
+      {/* Chat List */}
+      <View className="px-4 py-4">
+        {chatGroups.map((group, groupIndex) => (
+          <View key={groupIndex} className="mb-6">
+            <Text className="block text-slate-500 text-xs font-medium uppercase tracking-wide mb-2 ml-1">
+              {group.title}
+            </Text>
+            <View className="bg-white rounded-2xl overflow-hidden">
+              {group.chats.map((chat, chatIndex) => (
                 <View
-                  key={conv.id}
-                  className="bg-white rounded-2xl p-4 shadow-sm active:bg-slate-50 transition-colors"
-                  onClick={handleChat}
+                  key={chat.id}
+                  className={`p-4 flex items-center ${chatIndex !== group.chats.length - 1 ? 'border-b border-slate-100' : ''}`}
+                  onClick={() => Taro.navigateTo({ url: '/pages/chat/index' })}
                 >
-                  <View className="flex items-start gap-3">
-                    <View className={`w-12 h-12 rounded-xl ${conv.iconBg} flex items-center justify-center flex-shrink-0`}>
-                      <conv.icon size={22} color="#6366f1" />
-                    </View>
-                    <View className="flex-1 min-w-0">
-                      <View className="flex items-start justify-between gap-2">
-                        <Text className="block text-sm font-semibold text-slate-800">{conv.title}</Text>
-                        <Text className="text-xs text-slate-400 flex-shrink-0">{conv.time}</Text>
-                      </View>
-                      <Text className="block text-xs text-slate-500 mt-1 truncate">{conv.preview}</Text>
-                      <View className="flex items-center gap-4 mt-3 pt-3 border-t border-slate-100">
-                        <View className="flex items-center gap-1">
-                          <MessageCircle size={12} color="#94a3b8" />
-                          <Text className="text-xs text-slate-400">{conv.messageCount} 条消息</Text>
-                        </View>
-                        <View className="flex items-center gap-1 text-indigo-500">
-                          <Text className="text-xs font-medium">继续对话</Text>
-                          <ChevronRight size={12} color="#6366f1" />
-                        </View>
-                      </View>
+                  <View className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center mr-3">
+                    <MessageSquare size={20} color="#2563eb" />
+                  </View>
+                  <View className="flex-1 min-w-0">
+                    <Text className="block text-slate-800 text-sm font-medium truncate">{chat.title}</Text>
+                    <Text className="block text-slate-400 text-xs mt-1 truncate">{chat.preview}</Text>
+                  </View>
+                  <View className="flex flex-col items-end ml-2">
+                    <Text className="text-slate-400 text-xs">{chat.time}</Text>
+                    <View className="mt-1 px-2 py-1 bg-slate-100 rounded text-slate-500">
+                      <Text className="text-xs">{chat.count}条</Text>
                     </View>
                   </View>
                 </View>
@@ -124,8 +82,6 @@ export default function History() {
           </View>
         ))}
       </View>
-      
-      <View className="h-8" />
     </View>
   )
 }
