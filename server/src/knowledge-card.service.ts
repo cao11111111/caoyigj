@@ -34,11 +34,11 @@ export class KnowledgeCardService {
   private buildPrompt(userContent: string): string {
     return `${userContent}
 
-请将以上内容生成一份适合学校师生阅读的知识卡片，要求：
-1. 内容科学准确，适合中小学生理解
-2. 卡片设计为卡通风格，色彩鲜艳活泼
+请将以上培训内容生成一份适合中小学教师学习的知识卡片，要求：
+1. 内容专业准确，适合教师培训后知识总结
+2. 卡片设计为简约专业风格，色调稳重舒适
 3. 包含标题、核心概念、关键要点、记忆口诀等板块
-4. 布局清晰美观，像一张精美的学习卡片`;
+4. 布局清晰美观，像一张精美的教学知识卡片`;
   }
 
   private async generateImage(prompt: string): Promise<string> {
