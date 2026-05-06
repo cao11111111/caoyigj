@@ -1,14 +1,14 @@
 import { View, Text } from '@tarojs/components'
-import { FileText, Calendar, MessageSquare, CircleQuestionMark, Settings, ChevronRight } from 'lucide-react-taro'
+import { BookOpen, Construction, ChevronRight } from 'lucide-react-taro'
 import Taro from '@tarojs/taro'
 import './index.config'
 
 export default function Index() {
   const quickActions = [
-    { icon: FileText, title: '文档助手', desc: '帮我写文档', color: 'bg-blue-500' },
-    { icon: Calendar, title: '日程安排', desc: '智能排日程', color: 'bg-emerald-500' },
-    { icon: MessageSquare, title: '会议纪要', desc: '生成会议总结', color: 'bg-amber-500' },
-    { icon: CircleQuestionMark, title: '问答助手', desc: '解答工作问题', color: 'bg-purple-500' },
+    { icon: BookOpen, title: '知识卡片', desc: '快速查询知识', color: 'bg-blue-500', available: true },
+    { icon: Construction, title: '待开发', desc: '功能开发中', color: 'bg-slate-300', available: false },
+    { icon: Construction, title: '待开发', desc: '功能开发中', color: 'bg-slate-300', available: false },
+    { icon: Construction, title: '待开发', desc: '功能开发中', color: 'bg-slate-300', available: false },
   ]
 
   const recentChats = [
@@ -26,9 +26,6 @@ export default function Index() {
             <Text className="block text-white text-lg font-semibold">您好，王小明</Text>
             <Text className="block text-blue-100 text-sm mt-1">有什么可以帮您的？</Text>
           </View>
-          <View className="w-11 h-11 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
-            <Settings size={20} color="#ffffff" />
-          </View>
         </View>
       </View>
 
@@ -41,12 +38,20 @@ export default function Index() {
               <View
                 key={index}
                 className="flex flex-col items-center"
-                onClick={() => Taro.navigateTo({ url: '/pages/chat/index' })}
+                onClick={() => {
+                  if (item.available) {
+                    Taro.navigateTo({ url: '/pages/chat/index' })
+                  } else {
+                    Taro.showToast({ title: '功能开发中', icon: 'none' })
+                  }
+                }}
               >
                 <View className={`w-12 h-12 ${item.color} rounded-2xl flex items-center justify-center mb-2`}>
                   <item.icon size={22} color="#ffffff" />
                 </View>
-                <Text className="block text-slate-700 text-xs font-medium">{item.title}</Text>
+                <Text className={`block text-xs font-medium ${item.available ? 'text-slate-700' : 'text-slate-400'}`}>
+                  {item.title}
+                </Text>
               </View>
             ))}
           </View>
@@ -74,7 +79,7 @@ export default function Index() {
               onClick={() => Taro.navigateTo({ url: '/pages/chat/index' })}
             >
               <View className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center mr-3">
-                <MessageSquare size={18} color="#2563eb" />
+                <BookOpen size={18} color="#2563eb" />
               </View>
               <View className="flex-1 min-w-0">
                 <Text className="block text-slate-800 text-sm font-medium truncate">{item.title}</Text>
@@ -84,14 +89,6 @@ export default function Index() {
             </View>
           ))}
         </View>
-      </View>
-
-      {/* New Chat FAB */}
-      <View
-        className="fixed bottom-24 right-4 w-14 h-14 bg-blue-500 rounded-full flex items-center justify-center shadow-lg"
-        onClick={() => Taro.navigateTo({ url: '/pages/chat/index' })}
-      >
-        <MessageSquare size={24} color="#ffffff" />
       </View>
     </View>
   )
