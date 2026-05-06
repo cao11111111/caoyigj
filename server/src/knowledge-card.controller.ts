@@ -2,7 +2,7 @@ import { Controller, Post, Body } from '@nestjs/common';
 import { KnowledgeCardService } from './knowledge-card.service';
 
 interface GenerateDto {
-  topic: string;
+  userContent: string;
 }
 
 @Controller('knowledge-card')
@@ -11,6 +11,6 @@ export class KnowledgeCardController {
 
   @Post('generate')
   async generate(@Body() dto: GenerateDto) {
-    return this.knowledgeCardService.generate(dto.topic);
+    return this.knowledgeCardService.generate(dto.userContent);
   }
 }

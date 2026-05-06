@@ -6,6 +6,7 @@ export interface KnowledgeCard {
   coreConcept: string;
   keyPoints: string[];
   memoryTip: string;
+  imageUrl?: string;
 }
 
 interface CozeResponse {
@@ -24,16 +25,41 @@ interface CozeResponse {
 export class KnowledgeCardService {
   private readonly cozeApiBase = process.env.COZE_API_BASE_URL || 'https://api.coze.cn';
   private readonly cozeToken = process.env.COZE_API_TOKEN;
+  
+  // 图像生成 API 配置
+  private readonly imageApiBase = 'https://ark.cn-beijing.volces.com/api/v3';
+  private readonly imageApiKey = 'sk-w0V20fsgKFWm1tiAMUi4Mof7KREdI1AoFDdfOp2GDnOjzplt';
 
-  async generate(topic: string): Promise<{ code: number; msg: string; data: KnowledgeCard }> {
-    // 如果没有配置 Coze Token，返回模拟数据
-    if (!this.cozeToken) {
-      return this.getMockData(topic);
+  async generate(userContent: string): Promise<{ code: number; msg: string; data: KnowledgeCard }> {
+    // 生成知识卡片内容
+    let cardData: KnowledgeCard;
+    
+    if (this.cozeToken) {
+      cardData = await this.generateFromCoze(userContent);
+    } else {
+      cardData = this.getMockData(userContent);
     }
 
+    // 生成配图
     try {
-      const prompt = this.buildPrompt(topic);
-      
+      const imageUrl = await this.generateImage(userContent, cardData.title);
+      cardData.imageUrl = imageUrl;
+    } catch (error) {
+      console.error('Image generation failed:', error);
+      cardData.imageUrl = '';
+    }
+
+    return {
+      code: 200,
+      msg: 'success',
+      data: cardData
+    };
+  }
+
+  private async generateFromCoze(userContent: string): Promise<KnowledgeCard> {
+    const prompt = this.buildPrompt(userContent);
+    
+    try {
       const response = await axios.post(
         `${this.cozeApiBase}/v3/chat`,
         {
@@ -62,19 +88,20 @@ export class KnowledgeCardService {
       if (resData.code === 0 && resData.data && resData.data.length > 0) {
         const aiMessage = resData.data.find(msg => msg.role === 'assistant');
         if (aiMessage) {
-          return this.parseAIResponse(aiMessage.content, topic);
+          return this.parseAIResponse(aiMessage.content, userContent);
         }
       }
-
-      return this.getMockData(topic);
     } catch (error: any) {
       console.error('Coze API Error:', error.message);
-      return this.getMockData(topic);
     }
+    
+    return this.getMockData(userContent);
   }
 
-  private buildPrompt(topic: string): string {
-    return `请为"${topic}"生成一份适合学校师生阅读的知识卡片。
+  private buildPrompt(userContent: string): string {
+    return `${userContent}
+
+根据以上内容生成知识卡片，用于给师生看的卡通风格。
 
 请严格按照以下 JSON 格式返回（不要添加任何额外的解释说明，直接返回 JSON）：
 {
@@ -90,67 +117,70 @@ export class KnowledgeCardService {
 3. 记忆口诀要押韵、朗朗上口`;
   }
 
-  private parseAIResponse(content: string, topic: string): { code: number; msg: string; data: KnowledgeCard } {
+  private parseAIResponse(content: string, userContent: string): KnowledgeCard {
     try {
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
         if (parsed.title && parsed.coreConcept) {
           return {
-            code: 200,
-            msg: 'success',
-            data: {
-              title: parsed.title || topic,
-              coreConcept: parsed.coreConcept || '',
-              keyPoints: parsed.keyPoints || [],
-              memoryTip: parsed.memoryTip || ''
-            }
+            title: parsed.title || this.extractTitle(userContent),
+            coreConcept: parsed.coreConcept || '',
+            keyPoints: parsed.keyPoints || [],
+            memoryTip: parsed.memoryTip || ''
           };
         }
       }
     } catch (e) {
       console.error('Parse error:', e);
     }
-    return this.getMockData(topic);
+    return this.getMockData(userContent);
   }
 
-  private getMockData(topic: string): { code: number; msg: string; data: KnowledgeCard } {
-    const mockData: Record<string, KnowledgeCard> = {
-      '光合作用': {
-        title: '光合作用',
-        coreConcept: '植物利用阳光、二氧化碳和水制造养料的过程，就像植物在"吃饭"，为自己和动物提供能量和氧气。',
-        keyPoints: [
-          '光合作用需要阳光、二氧化碳和水三种原料',
-          '叶绿素是植物捕获阳光的关键物质',
-          '光合作用产生氧气，是地球氧气的主要来源'
-        ],
-        memoryTip: '光合作用：光+水+二氧化碳 → 有机物+氧气（光来水来，吐出养料和氧来）'
-      },
-      '勾股定理': {
-        title: '勾股定理',
-        coreConcept: '在直角三角形中，两条直角边的平方和等于斜边的平方。这是几何学中最重要的定理之一。',
-        keyPoints: [
-          '适用于直角三角形',
-          '公式：a² + b² = c²（c是斜边）',
-          '3-4-5是最经典的勾股数'
-        ],
-        memoryTip: '勾三股四弦五：勾三、股四、弦五，直角三角形记心头'
-      }
-    };
+  private extractTitle(content: string): string {
+    // 取内容前20个字符作为标题
+    const firstLine = content.split('\n')[0].trim();
+    return firstLine.length > 20 ? firstLine.substring(0, 20) + '...' : firstLine;
+  }
 
-    return {
-      code: 200,
-      msg: 'success',
-      data: mockData[topic] || {
-        title: topic,
-        coreConcept: `${topic}是学习中的重要知识点，通过理解其核心概念，掌握关键要点，可以更好地应用和记忆。`,
-        keyPoints: [
-          '这是需要掌握的第一个要点',
-          '这是需要掌握的关键内容',
-          '这是实际应用中的重点'
-        ],
-        memoryTip: `记住${topic}的核心：理解概念、掌握要点、勤加练习`
+  private async generateImage(userContent: string, title: string): Promise<string> {
+    const imagePrompt = `卡通风格知识卡片插图，主题：${title}，内容相关：${userContent.substring(0, 100)}，适合中小学生，清新可爱，教育风格，简洁背景`;
+
+    const response = await axios.post(
+      `${this.imageApiBase}/images/generations/`,
+      {
+        model: 'gpt-image-2',
+        prompt: imagePrompt,
+        n: 1,
+        size: '1024x1024'
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${this.imageApiKey}`,
+          'Content-Type': 'application/json'
+        }
       }
+    );
+
+    if (response.data?.data?.[0]?.url) {
+      return response.data.data[0].url;
+    }
+
+    throw new Error('Image URL not found');
+  }
+
+  private getMockData(userContent: string): KnowledgeCard {
+    const title = this.extractTitle(userContent);
+    
+    return {
+      title: title,
+      coreConcept: `${title}是学习中的重要知识点，通过理解其核心概念，掌握关键要点，可以更好地应用和记忆。`,
+      keyPoints: [
+        '这是需要掌握的第一个要点',
+        '这是需要掌握的关键内容',
+        '这是实际应用中的重点'
+      ],
+      memoryTip: `记住${title}的核心：理解概念、掌握要点、勤加练习`
     };
   }
 }

@@ -7,8 +7,6 @@ export default function Index() {
   const quickActions = [
     { icon: BookOpen, title: '知识卡片', desc: '快速查询知识', color: 'bg-blue-500', available: true },
     { icon: Construction, title: '待开发', desc: '功能开发中', color: 'bg-slate-300', available: false },
-    { icon: Construction, title: '待开发', desc: '功能开发中', color: 'bg-slate-300', available: false },
-    { icon: Construction, title: '待开发', desc: '功能开发中', color: 'bg-slate-300', available: false },
   ]
 
   const recentChats = [
