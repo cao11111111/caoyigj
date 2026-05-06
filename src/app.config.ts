@@ -19,7 +19,7 @@ export default defineAppConfig({
     list: [
       {
         pagePath: 'pages/index/index',
-        text: '助手',
+        text: '智能体',
         iconPath: './assets/tabbar/message-circle.png',
         selectedIconPath: './assets/tabbar/message-circle-active.png'
       },

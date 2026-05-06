@@ -1,13 +1,9 @@
 import { View, Text } from '@tarojs/components'
-import { Input } from '@/components/ui/input'
-import { useState } from 'react'
-import { Search, FileText, Calendar, MessageSquare, CircleQuestionMark, Settings, ChevronRight } from 'lucide-react-taro'
+import { FileText, Calendar, MessageSquare, CircleQuestionMark, Settings, ChevronRight } from 'lucide-react-taro'
 import Taro from '@tarojs/taro'
 import './index.config'
 
 export default function Index() {
-  const [searchValue, setSearchValue] = useState('')
-
   const quickActions = [
     { icon: FileText, title: '文档助手', desc: '帮我写文档', color: 'bg-blue-500' },
     { icon: Calendar, title: '日程安排', desc: '智能排日程', color: 'bg-emerald-500' },
@@ -25,7 +21,7 @@ export default function Index() {
     <View className="min-h-screen bg-slate-50 pb-20">
       {/* Header */}
       <View className="bg-blue-500 px-4 pt-12 pb-6">
-        <View className="flex items-center justify-between mb-5">
+        <View className="flex items-center justify-between">
           <View>
             <Text className="block text-white text-lg font-semibold">您好，王小明</Text>
             <Text className="block text-blue-100 text-sm mt-1">有什么可以帮您的？</Text>
@@ -34,24 +30,10 @@ export default function Index() {
             <Settings size={20} color="#ffffff" />
           </View>
         </View>
-
-        {/* Search */}
-        <View className="bg-white bg-opacity-15 rounded-2xl px-4 py-3 flex items-center">
-          <Search size={18} color="#bfdbfe" className="mr-2" />
-          <View className="flex-1">
-            <Input
-              className="w-full text-white text-sm bg-transparent"
-              placeholder="搜索或输入问题..."
-              placeholderClass="text-blue-200"
-              value={searchValue}
-              onInput={(e) => setSearchValue(e.detail.value)}
-            />
-          </View>
-        </View>
       </View>
 
       {/* Quick Actions */}
-      <View className="px-4 -mt-4">
+      <View className="px-4 mt-4">
         <View className="bg-white rounded-2xl p-4 shadow-sm">
           <Text className="block text-slate-800 text-base font-semibold mb-3">快捷入口</Text>
           <View className="grid grid-cols-4 gap-3">
