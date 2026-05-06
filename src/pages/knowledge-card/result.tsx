@@ -1,109 +1,106 @@
-import { View, Text, Image } from '@tarojs/components'
-import { ArrowLeft, RefreshCw } from 'lucide-react-taro'
-import Taro, { useRouter } from '@tarojs/taro'
-import { useEffect, useState } from 'react'
-import './result.config'
-
-interface KnowledgeCard {
-  title: string;
-  coreConcept: string;
-  keyPoints: string[];
-  memoryTip: string;
-  imageUrl?: string;
-}
+import { useEffect, useState } from "react"
+import Taro from "@tarojs/taro"
+import { View, Text, Image } from "@tarojs/components"
+import { Network } from "@/network"
+import "./result.css"
 
 export default function KnowledgeCardResult() {
-  const router = useRouter()
-  const [card, setCard] = useState<KnowledgeCard | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [imageUrl, setImageUrl] = useState("")
+  const [error, setError] = useState("")
 
   useEffect(() => {
-    const { data } = router.params
-    if (data) {
-      try {
-        const parsed = JSON.parse(decodeURIComponent(data))
-        setCard(parsed)
-      } catch (e) {
-        Taro.showToast({ title: '数据解析失败', icon: 'none' })
+    try {
+      const eventChannel = (Taro.getCurrentInstance().page as any)?.getOpenerEventChannel()
+      if (eventChannel?.on) {
+        eventChannel.on("result", async (data: { topic: string }) => {
+          if (data?.topic) {
+            await generateCard(data.topic)
+          }
+        })
       }
+    } catch (e) {
+      console.error("EventChannel error:", e)
     }
-  }, [router.params])
+  }, [])
 
-  if (!card) {
-    return (
-      <View className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <Text className="block text-slate-500">加载中...</Text>
-      </View>
-    )
+  const generateCard = async (topic: string) => {
+    setLoading(true)
+    setError("")
+    
+    try {
+      const res = await Network.request({
+        url: "/api/knowledge-card/generate",
+        method: "POST",
+        data: { topic }
+      })
+      
+      console.log("生成结果:", res.data)
+      
+      if (res.data?.code === 200 && res.data?.data?.imageUrl) {
+        setImageUrl(res.data.data.imageUrl)
+      } else {
+        setError(res.data?.msg || "生成失败")
+      }
+    } catch (err) {
+      console.error("生成失败:", err)
+      setError("网络错误，请重试")
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
-    <View className="min-h-screen bg-slate-50 pb-20">
-      {/* Header */}
-      <View className="bg-blue-500 px-4 pt-12 pb-4">
-        <View className="flex items-center justify-between">
-          <View className="flex items-center">
-            <View
-              className="w-8 h-8 rounded-full bg-white bg-opacity-20 flex items-center justify-center"
+    <View className="result-container">
+      <View className="content-card">
+        {loading ? (
+          <View className="loading-state">
+            <View className="loading-icon">
+              <Text className="block text-4xl">🎨</Text>
+            </View>
+            <Text className="block text-gray500 mt-4">正在生成知识卡片...</Text>
+          </View>
+        ) : error ? (
+          <View className="error-state">
+            <Text className="block text-gray500 text-center mb-4">{error}</Text>
+            <View 
+              className="bg-primary text-white rounded-2xl py-3 text-center"
               onClick={() => Taro.navigateBack()}
             >
-              <ArrowLeft size={20} color="#ffffff" />
+              <Text>返回重试</Text>
             </View>
-            <Text className="block text-white text-lg font-semibold ml-3">知识卡片</Text>
           </View>
-          <View
-            className="w-8 h-8 rounded-full bg-white bg-opacity-20 flex items-center justify-center"
-            onClick={() => Taro.navigateBack()}
-          >
-            <RefreshCw size={18} color="#ffffff" />
-          </View>
-        </View>
-      </View>
-
-      {/* Content */}
-      <View className="px-4 mt-4">
-        {/* Generated Image */}
-        {card.imageUrl && (
-          <View className="mb-4">
-            <Image
-              src={card.imageUrl}
-              mode="widthFix"
-              className="w-full rounded-2xl shadow-sm"
-              style={{ backgroundColor: '#f1f5f9' }}
-            />
+        ) : (
+          <View className="success-state">
+            <Text className="block text-lg font-semibold text-gray800 mb-4 text-center">
+              知识卡片已生成
+            </Text>
+            <View className="image-wrapper">
+              <Image 
+                src={imageUrl} 
+                className="result-image"
+                mode="aspectFit"
+                showMenuByLongpress
+              />
+            </View>
+            <View className="mt-4 flex gap-3">
+              <View 
+                className="flex-1 bg-gray100 text-gray700 rounded-2xl py-3 text-center"
+                onClick={() => Taro.navigateBack()}
+              >
+                <Text>继续生成</Text>
+              </View>
+              <View 
+                className="flex-1 bg-primary text-white rounded-2xl py-3 text-center"
+                onClick={() => {
+                  Taro.showToast({ title: "已保存", icon: "success" })
+                }}
+              >
+                <Text>保存图片</Text>
+              </View>
+            </View>
           </View>
         )}
-
-        {/* Title */}
-        <View className="bg-white rounded-2xl p-4 shadow-sm mb-3">
-          <Text className="block text-slate-800 text-xl font-bold">{card.title}</Text>
-        </View>
-
-        {/* Core Concept */}
-        <View className="bg-white rounded-2xl p-4 shadow-sm mb-3">
-          <Text className="block text-blue-500 text-sm font-semibold mb-2">核心概念</Text>
-          <Text className="block text-slate-700 text-sm leading-relaxed">{card.coreConcept}</Text>
-        </View>
-
-        {/* Key Points */}
-        <View className="bg-white rounded-2xl p-4 shadow-sm mb-3">
-          <Text className="block text-blue-500 text-sm font-semibold mb-3">关键要点</Text>
-          <View className="space-y-2">
-            {card.keyPoints.map((point, index) => (
-              <View key={index} className="flex items-start">
-                <View className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center mr-2 mt-1">
-                  <Text className="block text-blue-500 text-xs font-medium">{index + 1}</Text>
-                </View>
-                <Text className="block text-slate-700 text-sm flex-1 leading-relaxed">{point}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-
-        {/* Memory Tip */}
-        <View className="bg-blue-50 rounded-2xl p-4 shadow-sm mb-3">
-          <Text className="block text-blue-500 text-sm font-semibold mb-2">记忆口诀</Text>
-          <Text className="block text-slate-700 text-sm leading-relaxed">{card.memoryTip}</Text>
-        </View>
       </View>
     </View>
   )
