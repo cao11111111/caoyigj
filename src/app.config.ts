@@ -3,7 +3,9 @@ export default defineAppConfig({
     'pages/index/index',
     'pages/history/index',
     'pages/profile/index',
-    'pages/chat/index'
+    'pages/chat/index',
+    'pages/knowledge-card/index',
+    'pages/knowledge-card/result'
   ],
   window: {
     backgroundTextStyle: 'light',

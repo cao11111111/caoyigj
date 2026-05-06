@@ -40,7 +40,7 @@ export default function Index() {
                 className="flex flex-col items-center"
                 onClick={() => {
                   if (item.available) {
-                    Taro.navigateTo({ url: '/pages/chat/index' })
+                    Taro.navigateTo({ url: '/pages/knowledge-card/index' })
                   } else {
                     Taro.showToast({ title: '功能开发中', icon: 'none' })
                   }
