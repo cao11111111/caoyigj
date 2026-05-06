@@ -1,6 +1,6 @@
 import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
-import { FileText, Code, CircleQuestionMark, ChartBarBig, MessageCircle } from 'lucide-react-taro'
+import { FileText, Code, CircleQuestionMark, ChartBarBig, MessageCircle, ChevronRight, Clock } from 'lucide-react-taro'
 
 interface Conversation {
   id: string
@@ -9,6 +9,7 @@ interface Conversation {
   time: string
   messageCount: number
   icon: typeof FileText
+  iconBg: string
   dateGroup: string
 }
 
@@ -20,6 +21,7 @@ const conversations: Conversation[] = [
     time: '14:30',
     messageCount: 12,
     icon: FileText,
+    iconBg: 'bg-gradient-to-br from-indigo-100 to-indigo-50',
     dateGroup: '今天'
   },
   {
@@ -29,6 +31,7 @@ const conversations: Conversation[] = [
     time: '11:20',
     messageCount: 5,
     icon: CircleQuestionMark,
+    iconBg: 'bg-gradient-to-br from-green-100 to-emerald-50',
     dateGroup: '今天'
   },
   {
@@ -38,6 +41,7 @@ const conversations: Conversation[] = [
     time: '16:45',
     messageCount: 8,
     icon: Code,
+    iconBg: 'bg-gradient-to-br from-purple-100 to-purple-50',
     dateGroup: '昨天'
   },
   {
@@ -47,6 +51,7 @@ const conversations: Conversation[] = [
     time: '10:30',
     messageCount: 15,
     icon: ChartBarBig,
+    iconBg: 'bg-gradient-to-br from-amber-100 to-orange-50',
     dateGroup: '昨天'
   },
 ]
@@ -66,37 +71,52 @@ export default function History() {
   }, {} as Record<string, Conversation[]>)
 
   return (
-    <View className="min-h-screen bg-background pb-[calc(3.5rem+env(safe-area-inset-bottom))]">
+    <View className="min-h-screen bg-gradient-to-b from-indigo-50 via-white to-slate-50 pb-[calc(3.5rem+env(safe-area-inset-bottom))]">
+      {/* Header */}
+      <View className="px-5 pt-8 pb-4">
+        <View className="flex items-center gap-3">
+          <Clock size={24} color="#6366f1" />
+          <Text className="text-xl font-bold text-slate-800">对话历史</Text>
+        </View>
+        <Text className="block text-sm text-slate-500 mt-1">共 {conversations.length} 条对话记录</Text>
+      </View>
+
       {/* Conversation List */}
-      <View className="px-4 py-4 space-y-4">
+      <View className="px-5 space-y-6">
         {Object.entries(groupedData).map(([dateGroup, items]) => (
           <View key={dateGroup}>
-            <Text className="block text-xs font-medium text-on-surface-variant mb-3">{dateGroup}</Text>
+            <View className="flex items-center gap-2 mb-3">
+              <View className="w-2 h-2 rounded-full bg-indigo-400" />
+              <Text className="text-sm font-semibold text-slate-600">{dateGroup}</Text>
+            </View>
             <View className="space-y-3">
               {items.map((conv) => (
                 <View
                   key={conv.id}
-                  className="p-4 bg-surface rounded-xl shadow-card active:bg-surface-container"
+                  className="bg-white rounded-2xl p-4 shadow-sm active:bg-slate-50 transition-colors"
                   onClick={handleChat}
                 >
-                  <View className="flex items-start justify-between">
-                    <View className="flex items-center gap-3 flex-1">
-                      <View className="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center flex-shrink-0">
-                        <conv.icon size={20} color="#1E40AF" />
+                  <View className="flex items-start gap-3">
+                    <View className={`w-12 h-12 rounded-xl ${conv.iconBg} flex items-center justify-center flex-shrink-0`}>
+                      <conv.icon size={22} color="#6366f1" />
+                    </View>
+                    <View className="flex-1 min-w-0">
+                      <View className="flex items-start justify-between gap-2">
+                        <Text className="block text-sm font-semibold text-slate-800">{conv.title}</Text>
+                        <Text className="text-xs text-slate-400 flex-shrink-0">{conv.time}</Text>
                       </View>
-                      <View className="flex-1 min-w-0">
-                        <Text className="block text-sm font-medium text-on-surface">{conv.title}</Text>
-                        <Text className="block text-xs text-on-surface-variant mt-1 truncate">{conv.preview}</Text>
+                      <Text className="block text-xs text-slate-500 mt-1 truncate">{conv.preview}</Text>
+                      <View className="flex items-center gap-4 mt-3 pt-3 border-t border-slate-100">
+                        <View className="flex items-center gap-1">
+                          <MessageCircle size={12} color="#94a3b8" />
+                          <Text className="text-xs text-slate-400">{conv.messageCount} 条消息</Text>
+                        </View>
+                        <View className="flex items-center gap-1 text-indigo-500">
+                          <Text className="text-xs font-medium">继续对话</Text>
+                          <ChevronRight size={12} color="#6366f1" />
+                        </View>
                       </View>
                     </View>
-                    <Text className="text-xs text-on-surface-variant ml-2">{conv.time}</Text>
-                  </View>
-                  <View className="flex items-center gap-4 mt-3 pt-3 border-t border-outline">
-                    <View className="flex items-center gap-1">
-                      <MessageCircle size={12} color="#64748B" />
-                      <Text className="text-xs text-on-surface-variant">{conv.messageCount} 条消息</Text>
-                    </View>
-                    <Text className="text-xs text-primary">继续对话</Text>
                   </View>
                 </View>
               ))}
@@ -104,6 +124,8 @@ export default function History() {
           </View>
         ))}
       </View>
+      
+      <View className="h-8" />
     </View>
   )
 }

@@ -1,126 +1,60 @@
-/* stylelint-disable selector-type-no-unknown */
-/* stylelint-disable at-rule-no-unknown */
-/* stylelint-disable number-max-precision */
-@import url('weapp-tailwindcss');
+@import 'weapp-tailwindcss';
 
-/* 小程序页面容器高度设置，确保垂直居中生效 */
-page {
-  height: 100%;
-}
+:root, page, root-portal {
+  /* Primary Colors - Modern Indigo */
+  --color-primary: #6366f1;
+  --color-primary-light: #818cf8;
+  --color-primary-container: #eef2ff;
+  --color-on-primary: #ffffff;
 
-:root,
-page,
-root-portal {
-  /* 品牌色 - 商务蓝色 */
-  --primary: #1E40AF;
-  --primary-foreground: #ffffff;
-  --primary-container: #DBEAFE;
-  
-  /* 背景色 - 微蓝白底 */
-  --background: #FAFCFF;
-  --foreground: #1E293B;
-  
-  /* 表面色 */
-  --card: #ffffff;
-  --card-foreground: #1E293B;
-  --popover: #ffffff;
-  --popover-foreground: #1E293B;
-  
-  /* 次级色 */
-  --secondary: #F1F5F9;
-  --secondary-foreground: #1E293B;
-  
-  /* 柔和色 */
-  --muted: #F1F5F9;
-  --muted-foreground: #64748B;
-  
-  /* 强调色 */
-  --accent: #F1F5F9;
-  --accent-foreground: #1E40AF;
-  
-  /* 边框 */
-  --border: #E2E8F0;
-  --input: #F1F5F9;
-  --ring: #1E40AF;
-  
-  /* 功能色 */
-  --destructive: #ef4444;
-  --destructive-foreground: #ffffff;
-  --success: #22c55e;
-  --warning: #f59e0b;
-  
-  /* 侧边栏 */
-  --sidebar: #ffffff;
-  --sidebar-foreground: #1E293B;
-  --sidebar-primary: #1E40AF;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #F1F5F9;
-  --sidebar-accent-foreground: #1E40AF;
-  --sidebar-border: #E2E8F0;
-  --sidebar-ring: #1E40AF;
-  
-  /* 表面层级 */
-  --surface: #ffffff;
-  --surface-container-lowest: #ffffff;
-  --surface-container: #F1F5F9;
-  --surface-container-high: #E2E8F0;
-  --surface-container-highest: #CBD5E1;
-  
-  --code: var(--surface);
-  --code-highlight: #F8FAFC;
-  --code-number: #64748B;
-  --selection: #1E40AF;
-  --selection-foreground: #ffffff;
+  /* Secondary Colors - Purple Accent */
+  --color-secondary: #8b5cf6;
+  --color-secondary-container: #f5f3ff;
 
-  /* 阴影 */
-  --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
-  --shadow-dialog: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-}
+  /* Background Colors */
+  --color-background: #f8fafc;
+  --color-surface: #ffffff;
+  --color-surface-elevated: rgba(255, 255, 255, 0.8);
+  --color-surface-container: #f1f5f9;
+  --color-surface-container-high: #e2e8f0;
 
-@theme {
-  --tw-shadow: 0 0 #0000;
-  --tw-shadow-color: initial;
-  --tw-shadow-alpha: 100%;
-  --tw-inset-shadow: 0 0 #0000;
-  --tw-inset-shadow-color: initial;
-  --tw-inset-shadow-alpha: 100%;
-  --tw-ring-color: initial;
-  --tw-ring-shadow: 0 0 #0000;
-  --tw-inset-ring-color: initial;
-  --tw-inset-ring-shadow: 0 0 #0000;
-  --tw-ring-inset: initial;
-  --tw-ring-offset-width: 0px;
-  --tw-ring-offset-color: #fff;
-  --tw-ring-offset-shadow: 0 0 #0000;
-}
+  /* Text Colors */
+  --color-on-surface: #1e293b;
+  --color-on-surface-variant: #64748b;
+  --color-outline: #e2e8f0;
+  --color-outline-variant: #cbd5e1;
 
-.dark {
-  --background: lab(2.75381% 0 0);
-  --foreground: lab(98.26% 0 0);
-  --card: lab(7.78201% -0.0000149012 0);
-  --card-foreground: lab(98.26% 0 0);
-  --popover: lab(7.78201% -0.0000149012 0);
-  --popover-foreground: lab(98.26% 0 0);
-  --primary: lab(90.952% 0 -0.0000119209);
-  --primary-foreground: lab(7.78201% -0.0000149012 0);
-  --secondary: lab(15.204% 0 -0.00000596046);
-  --secondary-foreground: lab(98.26% 0 0);
-  --muted: lab(15.204% 0 -0.00000596046);
-  --muted-foreground: lab(67.838% 0 -0.0000119209);
-  --accent: lab(15.204% 0 -0.00000596046);
-  --accent-foreground: lab(90.952% 0 -0.0000119209);
-  --destructive: lab(59.612% 0.20728 47.怒);
-  --destructive-foreground: lab(98.26% 0 0);
-  --success: lab(71.756% 0.19185 130.412);
-  --warning: lab(82.755% 0.20182 79.768);
-  --border: lab(21.051% 0.0081494 254.786);
-  --input: lab(21.051% 0.0081494 254.786);
-  --ring: lab(90.952% 0 -0.0000119209);
-  --surface: lab(7.78201% -0.0000149012 0);
-  --surface-container-lowest: lab(7.78201% -0.0000149012 0);
-  --surface-container: lab(15.204% 0 -0.00000596046);
-  --surface-container-high: lab(21.051% 0.0081494 254.786);
-  --surface-container-highest: lab(28.041% 0.0122241 254.786);
-  --selection: lab(90.952% 0 -0.0000119209);
-  --selection-foreground: lab(7.78201% -0.0000149012 0);
+  /* Functional Colors */
+  --color-success: #22c55e;
+  --color-success-container: #dcfce7;
+  --color-error: #ef4444;
+  --color-error-container: #fef2f2;
+  --color-warning: #f59e0b;
+  --color-warning-container: #fef3c7;
+
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  --gradient-secondary: linear-gradient(135deg, #8b5cf6 0%, #c084fc 100%);
+  --gradient-bg: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  --gradient-card: linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.8) 100%);
+  --gradient-hero: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+  /* Border Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08);
+  --shadow-float: 0 10px 40px rgba(0, 0, 0, 0.1);
+  --shadow-glow: 0 4px 24px rgba(99, 102, 241, 0.25);
+  --shadow-glow-lg: 0 8px 32px rgba(99, 102, 241, 0.35);
+
+  /* Font Family */
+  --font-sans: 'Noto Sans SC', system-ui, -apple-system, sans-serif;
 }
