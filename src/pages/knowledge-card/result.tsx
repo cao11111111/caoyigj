@@ -1,5 +1,5 @@
 import { View, Text, ScrollView } from '@tarojs/components'
-import { BookOpen, RefreshCw, Copy, Share, ArrowLeft, Lightbulb, BookMarked, MessageSquare } from 'lucide-react-taro'
+import { BookOpen, RefreshCw, Copy, ArrowLeft, Lightbulb, BookMarked, MessageSquare } from 'lucide-react-taro'
 import { useState, useEffect } from 'react'
 import Taro from '@tarojs/taro'
 import { Network } from '@/network'
@@ -10,8 +10,6 @@ interface KnowledgeCard {
   coreConcept: string
   keyPoints: string[]
   memoryTip: string
-  example: string
-  relatedTopics: string[]
 }
 
 export default function KnowledgeCardResult() {
@@ -58,7 +56,7 @@ export default function KnowledgeCardResult() {
 
   const handleCopy = () => {
     if (!card) return
-    const content = `${card.title}\n\n核心概念：${card.coreConcept}\n\n关键要点：\n${card.keyPoints.map(p => `• ${p}`).join('\n')}\n\n记忆口诀：${card.memoryTip}\n\n应用示例：${card.example}`
+    const content = `${card.title}\n\n核心概念：${card.coreConcept}\n\n关键要点：\n${card.keyPoints.map(p => `• ${p}`).join('\n')}\n\n记忆口诀：${card.memoryTip}`
     Taro.setClipboardData({
       data: content,
       success: () => Taro.showToast({ title: '已复制', icon: 'success' })
@@ -147,26 +145,6 @@ export default function KnowledgeCardResult() {
               </View>
               <Text className="block text-amber-700 text-sm leading-6 italic">{card.memoryTip}</Text>
             </View>
-
-            {/* Example */}
-            <View className="bg-white rounded-2xl p-4">
-              <Text className="block text-slate-800 font-semibold mb-3">应用示例</Text>
-              <Text className="block text-slate-600 text-sm leading-6">{card.example}</Text>
-            </View>
-
-            {/* Related Topics */}
-            {card.relatedTopics && card.relatedTopics.length > 0 && (
-              <View className="bg-white rounded-2xl p-4">
-                <Text className="block text-slate-800 font-semibold mb-3">相关主题</Text>
-                <View className="flex flex-wrap gap-2">
-                  {card.relatedTopics.map((topic, index) => (
-                    <View key={index} className="bg-slate-100 px-3 py-2 rounded-full">
-                      <Text className="text-slate-600 text-sm">{topic}</Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            )}
           </View>
         ) : null}
       </ScrollView>
@@ -181,10 +159,6 @@ export default function KnowledgeCardResult() {
           <View className="flex flex-col items-center" onClick={handleCopy}>
             <Copy size={20} color="#64748b" />
             <Text className="text-slate-500 text-xs mt-1">复制内容</Text>
-          </View>
-          <View className="flex flex-col items-center" onClick={() => Taro.showToast({ title: '功能开发中', icon: 'none' })}>
-            <Share size={20} color="#64748b" />
-            <Text className="text-slate-500 text-xs mt-1">分享</Text>
           </View>
         </View>
       )}
