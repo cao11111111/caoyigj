@@ -3,6 +3,7 @@ import { ArrowLeft, Send } from 'lucide-react-taro'
 import Taro from '@tarojs/taro'
 import { useState } from 'react'
 import { Network } from '@/network'
+import { Textarea } from '@/components/ui/textarea'
 import './index.config'
 
 export default function KnowledgeCardInput() {
