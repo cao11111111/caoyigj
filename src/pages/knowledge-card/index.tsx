@@ -10,7 +10,9 @@ export default function KnowledgeCardInput() {
   const [loading, setLoading] = useState(false)
 
   const handleInput = (e: any) => {
-    setContent(e.detail.value)
+    // H5 端 textarea 返回 e.target.value，小程序端返回 e.detail.value
+    const value = e.detail?.value ?? e.target?.value ?? ''
+    setContent(value)
   }
 
   const handleGenerate = async () => {
