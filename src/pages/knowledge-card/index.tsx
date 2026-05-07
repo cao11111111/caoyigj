@@ -1,4 +1,4 @@
-import { View, Text, Textarea } from '@tarojs/components'
+import { View, Text } from '@tarojs/components'
 import { ArrowLeft, Send } from 'lucide-react-taro'
 import Taro from '@tarojs/taro'
 import { useState } from 'react'
@@ -8,6 +8,10 @@ import './index.config'
 export default function KnowledgeCardInput() {
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(false)
+
+  const handleInput = (e: any) => {
+    setContent(e.detail.value)
+  }
 
   const handleGenerate = async () => {
     if (!content.trim()) {
@@ -52,30 +56,44 @@ export default function KnowledgeCardInput() {
         </View>
       </View>
 
-      {/* Content */}
-      <View className="flex-1 px-4 py-4">
-        <View className="bg-white rounded-2xl p-4 shadow-sm" style={{ minHeight: '300px' }}>
-          <Text className="block text-gray-700 text-base font-medium mb-3">
-            输入您想生成的知识内容
-          </Text>
-          
-          <View className="flex-1" style={{ minHeight: '240px' }}>
-            <Textarea
-              className="w-full text-base text-gray-800 p-3 bg-gray-50 rounded-xl"
-              placeholder="请输入知识点内容..."
-              value={content}
-              onInput={(e: any) => setContent(e.detail.value)}
-              style={{ minHeight: '240px', backgroundColor: '#f8fafc' }}
-            />
+      {/* Main Content */}
+      <View className="flex-1 px-4 py-4 flex flex-col">
+        <Text className="block text-gray-600 text-sm mb-2">请输入您想生成的知识内容</Text>
+        
+        <View className="flex-1 bg-white rounded-2xl p-4 flex flex-col" style={{ minHeight: '400px' }}>
+          <View className="flex-1">
+            {/* 小程序端使用 Textarea */}
+            {Taro.getEnv() !== 'WEB' ? (
+              <View style={{ height: '360px' }}>
+                <Textarea
+                  className="w-full h-full text-base text-gray-800 p-3 bg-gray-50 rounded-xl"
+                  placeholder="请输入知识点内容..."
+                  value={content}
+                  onInput={handleInput}
+                  style={{ backgroundColor: '#f8fafc' }}
+                />
+              </View>
+            ) : (
+              /* H5 端使用原生 textarea */
+              <View style={{ height: '360px', backgroundColor: '#f8fafc', borderRadius: '12px', padding: '12px' }}>
+                <textarea
+                  className="w-full h-full text-base text-gray-800 border-0 outline-none resize-none"
+                  placeholder="请输入知识点内容..."
+                  value={content}
+                  onChange={handleInput}
+                  style={{ backgroundColor: 'transparent', fontFamily: 'inherit' }}
+                />
+              </View>
+            )}
           </View>
           
-          <View className="mt-4 flex items-center justify-end">
+          <View className="mt-4 flex justify-end">
             <View
-              className={`px-6 py-3 rounded-full flex items-center ${loading ? 'bg-gray-300' : 'bg-blue-500'}`}
+              className={`px-6 py-3 rounded-full flex items-center flex-row ${loading ? 'bg-gray-400' : 'bg-blue-500'}`}
               onClick={loading ? undefined : handleGenerate}
             >
-              <Send size={18} color="#ffffff" className="mr-2" />
-              <Text className="block text-white text-sm font-medium">
+              <Send size={18} color="#ffffff" />
+              <Text className="block text-white text-sm font-medium ml-2">
                 {loading ? '生成中...' : '生成'}
               </Text>
             </View>
