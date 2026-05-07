@@ -34,7 +34,8 @@ export class KnowledgeCardService {
           n: 1,
           size: 'auto', // 自动选择最佳尺寸
           quality: 'hd', // 最高质量
-          response_format: 'url'
+          response_format: 'url',
+          format: 'png' // PNG 格式
         },
         {
           headers: {
