@@ -36,7 +36,7 @@ export class KnowledgeCardService {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${this.imageApiKey}`
           },
-          timeout: 300000
+          timeout: 180000 // 3分钟
         }
       );
 
