@@ -32,7 +32,7 @@ export class KnowledgeCardService {
           model: 'gpt-image-2',
           prompt: prompt,
           n: 1,
-          size: '1024x1024',
+          size: 'auto', // 自动选择最佳尺寸
           quality: 'hd', // 最高质量
           response_format: 'url'
         },
