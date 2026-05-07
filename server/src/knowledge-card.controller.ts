@@ -14,6 +14,6 @@ export class KnowledgeCardController {
   @Post('generate')
   async generate(@Body() dto: GenerateDto) {
     this.logger.log('Received request:', JSON.stringify(dto));
-    return this.knowledgeCardService.generate(dto.userContent || dto.topic || '');
+    return this.knowledgeCardService.generate(dto.userContent || '');
   }
 }
