@@ -26,7 +26,7 @@ export class KnowledgeCardService {
       const response = await axios.post(
         `${this.imageApiBase}/images/generations/`,
         {
-          model: 'image-2',
+          model: 'gpt-image-2',
           prompt: prompt,
           n: 1,
           size: '1024x1024'
@@ -36,12 +36,14 @@ export class KnowledgeCardService {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${this.imageApiKey}`
           },
-          timeout: 180000 // 3分钟
+          timeout: 300000, // 5分钟
+          maxContentLength: 50 * 1024 * 1024, // 50MB
+          maxBodyLength: 50 * 1024 * 1024 // 50MB
         }
       );
 
+      // 移除大数据日志输出，避免超时
       console.log('[KnowledgeCard] API Response status:', response.status);
-      console.log('[KnowledgeCard] API Response data:', JSON.stringify(response.data));
 
       // 解析标准 OpenAI 格式的响应
       // {"created":123,"data":[{"url":"..."}],"usage":{...}}
@@ -62,8 +64,7 @@ export class KnowledgeCardService {
     } catch (error) {
       console.error('[KnowledgeCard] Image generation error:', error.message);
       if (error.response) {
-        console.error('[KnowledgeCard] Response status:', error.response.status);
-        console.error('[KnowledgeCard] Response data:', JSON.stringify(error.response.data));
+        console.error('[KnowledgeCard] Response status:', error.response?.status);
       }
       throw new Error(`Failed to generate image: ${error.message}`);
     }
