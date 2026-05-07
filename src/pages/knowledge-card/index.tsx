@@ -1,4 +1,4 @@
-import { View, Text } from '@tarojs/components'
+import { View, Text, Textarea } from '@tarojs/components'
 import { ArrowLeft, Send } from 'lucide-react-taro'
 import Taro from '@tarojs/taro'
 import { useState } from 'react'
