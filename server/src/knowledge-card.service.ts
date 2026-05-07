@@ -1,68 +1,71 @@
 import { Injectable } from '@nestjs/common';
 import axios from 'axios';
 
-export interface KnowledgeCard {
-  imageUrl: string;
-}
-
 @Injectable()
 export class KnowledgeCardService {
-  // 速创 API 配置
-  private readonly imageApiBase = 'https://api.suchuang.vip/v1';
-  private readonly imageApiKey = 'sk-w0V20fsgKFWm1tiAMUi4Mof7KREdI1AoFDdfOp2GDnOjzplt';
+  private readonly imageApiBase = process.env.IMAGE_API_BASE || 'https://api.suchuang.vip/v1';
+  private readonly imageApiKey = process.env.IMAGE_API_KEY || 'sk-w0V20fsgKFWm1tiAMUi4Mof7KREdI1AoFDdfOp2GDnOjzplt';
 
-  async generate(userContent: string): Promise<{ code: number; msg: string; data: KnowledgeCard }> {
-    const prompt = this.buildPrompt(userContent);
+  private readonly promptPrefix = '请将以上培训内容生成一份适合中小学教师学习的知识卡片，要求：\n1. 内容专业准确，适合教师培训后知识总结\n2. 卡片设计为简约专业风格，色调稳重舒适\n3. 包含标题、核心概念、关键要点、记忆口诀等板块\n4. 布局清晰美观，像一张精美的教学知识卡片';
+
+  async generate(topic: string): Promise<{ imageUrl: string }> {
+    const fullPrompt = `${topic}\n\n${this.promptPrefix}`;
+    console.log('[KnowledgeCard] Generating with prompt:', fullPrompt);
     
-    try {
-      const imageUrl = await this.generateImage(prompt);
-      return {
-        code: 200,
-        msg: 'success',
-        data: { imageUrl }
-      };
-    } catch (error) {
-      console.error('Image generation failed:', error);
-      return {
-        code: 500,
-        msg: '生成失败，请稍后重试',
-        data: { imageUrl: '' }
-      };
-    }
-  }
-
-  private buildPrompt(userContent: string): string {
-    return `${userContent}
-
-请将以上培训内容生成一份适合中小学教师学习的知识卡片，要求：
-1. 内容专业准确，适合教师培训后知识总结
-2. 卡片设计为简约专业风格，色调稳重舒适
-3. 包含标题、核心概念、关键要点、记忆口诀等板块
-4. 布局清晰美观，像一张精美的教学知识卡片`;
+    const imageUrl = await this.generateImage(fullPrompt);
+    console.log('[KnowledgeCard] Generated image URL:', imageUrl);
+    
+    return { imageUrl };
   }
 
   private async generateImage(prompt: string): Promise<string> {
-    const response = await axios.post(
-      `${this.imageApiBase}/images/generations/`,
-      {
-        model: 'gpt-image-2',
-        prompt: prompt,
-        n: 1,
-        size: '1024x1024'
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.imageApiKey}`
+    console.log('[KnowledgeCard] Generating image...');
+    
+    try {
+      // 速创 API 图像生成
+      const response = await axios.post(
+        `${this.imageApiBase}/images/generations/`,
+        {
+          model: 'image-2',
+          prompt: prompt,
+          n: 1,
+          size: '1024x1024'
         },
-        timeout: 60000
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.imageApiKey}`
+          },
+          timeout: 300000
+        }
+      );
+
+      console.log('[KnowledgeCard] API Response status:', response.status);
+      console.log('[KnowledgeCard] API Response data:', JSON.stringify(response.data));
+
+      // 解析标准 OpenAI 格式的响应
+      // {"created":123,"data":[{"url":"..."}],"usage":{...}}
+      const imageData = response.data?.data;
+      if (imageData && Array.isArray(imageData) && imageData.length > 0) {
+        const imageUrl = imageData[0]?.url || imageData[0]?.b64_json;
+        if (imageUrl) {
+          return imageUrl;
+        }
       }
-    );
 
-    if (response.data?.data?.[0]?.url) {
-      return response.data.data[0].url;
+      // 备选：直接返回 data 字段
+      if (response.data?.url) {
+        return response.data.url;
+      }
+
+      throw new Error('No image URL in response');
+    } catch (error) {
+      console.error('[KnowledgeCard] Image generation error:', error.message);
+      if (error.response) {
+        console.error('[KnowledgeCard] Response status:', error.response.status);
+        console.error('[KnowledgeCard] Response data:', JSON.stringify(error.response.data));
+      }
+      throw new Error(`Failed to generate image: ${error.message}`);
     }
-
-    throw new Error('Failed to generate image');
   }
 }
