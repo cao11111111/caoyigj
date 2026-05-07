@@ -38,7 +38,7 @@ export class KnowledgeCardService {
           prompt: prompt,
           n: 1,
           size: '1024x1024',
-          quality: 'hd', // 高清质量
+          quality: 'auto', // 自动选择最佳质量
           response_format: 'url'
         },
         {
@@ -46,7 +46,7 @@ export class KnowledgeCardService {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${this.imageApiKey}`
           },
-          timeout: 300000, // 5分钟
+          timeout: 600000, // 10分钟
           maxContentLength: 50 * 1024 * 1024, // 50MB
           maxBodyLength: 50 * 1024 * 1024 // 50MB
         }
