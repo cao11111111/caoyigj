@@ -26,7 +26,7 @@ export class KnowledgeCardService {
       const response = await axios.post(
         `${this.imageApiBase}/images/generations`,
         {
-          model: 'image-2',
+          model: 'gpt-image-2',
           prompt: prompt,
           n: 1,
           size: 'auto',
