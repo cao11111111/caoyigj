@@ -7,8 +7,8 @@ export interface KnowledgeCard {
 
 @Injectable()
 export class KnowledgeCardService {
-  // 图像生成 API 配置
-  private readonly imageApiBase = 'https://ark.cn-beijing.volces.com/api/v3';
+  // 速创 API 配置
+  private readonly imageApiBase = 'https://api.suchuang.vip/v1';
   private readonly imageApiKey = 'sk-w0V20fsgKFWm1tiAMUi4Mof7KREdI1AoFDdfOp2GDnOjzplt';
 
   async generate(userContent: string): Promise<{ code: number; msg: string; data: KnowledgeCard }> {
