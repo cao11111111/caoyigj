@@ -1,8 +1,7 @@
 import { View, Text } from '@tarojs/components'
-import { ArrowLeft, Send } from 'lucide-react-taro'
+import { ArrowLeft } from 'lucide-react-taro'
 import Taro from '@tarojs/taro'
 import { useState } from 'react'
-import { Network } from '@/network'
 import { Textarea } from '@/components/ui/textarea'
 import './index.config'
 
@@ -24,10 +23,12 @@ export default function KnowledgeCardInput() {
 
     setLoading(true)
     try {
-      const res: any = await Network.request({
+      const res: any = await Taro.request({
         url: '/api/knowledge-card/generate',
         method: 'POST',
-        data: { userContent: content }
+        header: { 'Content-Type': 'application/json' },
+        data: { userContent: content },
+        timeout: 600000 // 10分钟
       })
       
       if (res.data.code === 200) {
@@ -38,6 +39,7 @@ export default function KnowledgeCardInput() {
         Taro.showToast({ title: res.data.msg || '生成失败', icon: 'none' })
       }
     } catch (error) {
+      console.error('生成失败:', error)
       Taro.showToast({ title: '网络请求失败', icon: 'none' })
     } finally {
       setLoading(false)
@@ -49,57 +51,51 @@ export default function KnowledgeCardInput() {
       {/* Header */}
       <View className="bg-blue-500 px-4 pt-12 pb-4 flex-shrink-0">
         <View className="flex items-center">
-          <View
-            className="w-9 h-9 rounded-full bg-white bg-opacity-20 flex items-center justify-center"
+          <ArrowLeft 
+            className="mr-4" 
+            color="#fff" 
+            size={24}
             onClick={() => Taro.navigateBack()}
-          >
-            <ArrowLeft size={22} color="#ffffff" />
-          </View>
-          <Text className="block text-white text-lg font-semibold ml-3">知识卡片</Text>
+          />
+          <Text className="block text-white text-lg font-medium">知识卡片</Text>
         </View>
       </View>
 
-      {/* Main Content */}
-      <View className="flex-1 px-4 py-4 flex flex-col">
-        <Text className="block text-gray-600 text-sm mb-2">请输入您想生成的知识内容</Text>
-        
-        <View className="flex-1 bg-white rounded-2xl p-4 flex flex-col" style={{ minHeight: '400px' }}>
-          <View className="flex-1">
-            {/* 小程序端使用 Textarea */}
-            {Taro.getEnv() !== 'WEB' ? (
-              <View style={{ height: '360px' }}>
-                <Textarea
-                  className="w-full h-full text-base text-gray-800 p-3 bg-gray-50 rounded-xl"
-                  placeholder="请输入知识点内容..."
-                  value={content}
-                  onInput={handleInput}
-                  style={{ backgroundColor: '#f8fafc' }}
-                />
-              </View>
+      {/* Content */}
+      <View className="flex-1 p-4 flex flex-col">
+        <View className="flex-1 mb-4">
+          <Text className="block text-gray-500 text-sm mb-2">输入培训内容</Text>
+          <View className="bg-white rounded-xl flex-1" style={{ minHeight: '360px' }}>
+            {Taro.getEnv() === Taro.ENV_TYPE.WEB ? (
+              <textarea
+                className="w-full h-full p-3 border-0 outline-none resize-none text-sm"
+                style={{ minHeight: '360px' }}
+                placeholder="请输入培训内容..."
+                value={content}
+                onChange={(e: any) => handleInput({ target: { value: e.target.value } })}
+              />
             ) : (
-              /* H5 端使用原生 textarea */
-              <View style={{ height: '360px', backgroundColor: '#f8fafc', borderRadius: '12px', padding: '12px' }}>
-                <textarea
-                  className="w-full h-full text-base text-gray-800 border-0 outline-none resize-none"
-                  placeholder="请输入知识点内容..."
-                  value={content}
-                  onChange={handleInput}
-                  style={{ backgroundColor: 'transparent', fontFamily: 'inherit' }}
-                />
-              </View>
+              <Textarea
+                className="w-full h-full"
+                style={{ minHeight: '360px' }}
+                placeholder="请输入培训内容..."
+                value={content}
+                onInput={(e: any) => handleInput(e)}
+                maxlength={-1}
+              />
             )}
           </View>
-          
-          <View className="mt-4 flex justify-end">
-            <View
-              className={`px-6 py-3 rounded-full flex items-center flex-row ${loading ? 'bg-gray-400' : 'bg-blue-500'}`}
-              onClick={loading ? undefined : handleGenerate}
-            >
-              <Send size={18} color="#ffffff" />
-              <Text className="block text-white text-sm font-medium ml-2">
-                {loading ? '生成中...' : '生成'}
-              </Text>
-            </View>
+        </View>
+
+        {/* Generate Button */}
+        <View className="flex-shrink-0">
+          <View 
+            className={`rounded-xl py-4 text-center ${loading ? 'bg-gray-400' : 'bg-blue-500'} active:opacity-80`}
+            onClick={loading ? undefined : handleGenerate}
+          >
+            <Text className="block text-white text-base font-medium">
+              {loading ? '生成中...' : '生成知识卡片'}
+            </Text>
           </View>
         </View>
       </View>
