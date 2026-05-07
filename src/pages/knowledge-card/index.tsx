@@ -60,12 +60,14 @@ export default function KnowledgeCardInput() {
             输入您想生成的知识内容
           </Text>
           
-          <View className="bg-slate-50 rounded-xl px-4 py-3 min-h-32">
+          <View className="bg-slate-50 rounded-xl px-4 py-3 min-h-48">
             <Input
               className="w-full text-base text-slate-800"
               placeholder="请输入知识点内容..."
               value={content}
               onInput={(e: any) => setContent(e.detail.value)}
+              type="textarea"
+              style={{ minHeight: '160px' }}
             />
           </View>
           
