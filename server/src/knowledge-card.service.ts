@@ -32,12 +32,13 @@ export class KnowledgeCardService {
       // 速创 API 图像生成
       // 添加 response_format: "url" 获取 URL 而不是 b64_json
       const response = await axios.post(
-        `${this.imageApiBase}/images/generations/`,
+        `${this.imageApiBase}/images/generations`,
         {
           model: 'gpt-image-2',
           prompt: prompt,
           n: 1,
           size: '1024x1024',
+          quality: 'hd', // 高清质量
           response_format: 'url'
         },
         {
