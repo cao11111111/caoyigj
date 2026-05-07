@@ -14,6 +14,11 @@ export class KnowledgeCardController {
   @Post('generate')
   async generate(@Body() dto: GenerateDto) {
     this.logger.log('Received request:', JSON.stringify(dto));
-    return this.knowledgeCardService.generate(dto.userContent || '');
+    const imageUrl = await this.knowledgeCardService.generate(dto.userContent || '');
+    return {
+      code: 200,
+      msg: 'success',
+      data: { imageUrl }
+    };
   }
 }

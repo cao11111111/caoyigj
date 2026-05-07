@@ -8,14 +8,14 @@ export class KnowledgeCardService {
 
   private readonly promptPrefix = '请将以上培训内容生成一份适合中小学教师学习的知识卡片，要求：\n1. 内容专业准确，适合教师培训后知识总结\n2. 卡片设计为简约专业风格，色调稳重舒适\n3. 包含标题、核心概念、关键要点、记忆口诀等板块\n4. 布局清晰美观，像一张精美的教学知识卡片';
 
-  async generate(topic: string): Promise<{ imageUrl: string }> {
+  async generate(topic: string): Promise<string> {
     const fullPrompt = `${topic}\n\n${this.promptPrefix}`;
     console.log('[KnowledgeCard] Generating with prompt:', fullPrompt);
     
     const imageUrl = await this.generateImage(fullPrompt);
     console.log('[KnowledgeCard] Generated image URL:', imageUrl);
     
-    return { imageUrl };
+    return imageUrl;
   }
 
   private async generateImage(prompt: string): Promise<string> {
