@@ -8,12 +8,7 @@ export class KnowledgeCardService {
 
   private readonly promptPrefix = `上面是我传入的培训内容。
 
-请结合以上内容，生成一张图文并茂的知识卡片：
-1. 面对学校老师
-2. 卡通手绘风格，色彩活泼
-3. 包含标题、核心概念、关键要点、记忆口诀
-4. 配上可爱的插图和图标
-5. 布局清晰美观，像一张精美的手绘知识卡片`;
+专为学校教师打造教学知识卡片，整体采用卡通手绘风格，配色明亮活泼、线条圆润童趣；卡片固定包含主标题、核心概念、关键要点、趣味记忆口诀四大模块；搭配贴合教学主题的可爱卡通插图与简约小图标点缀；排版分区清晰、留白舒适，布局精致规整，整体质感如同精美纸质手绘卡片，画面干净无冗余文字，适配教学课件直接使用`;
 
   async generate(topic: string): Promise<string> {
     const fullPrompt = `${topic}\n\n${this.promptPrefix}`;
@@ -38,7 +33,7 @@ export class KnowledgeCardService {
           prompt: prompt,
           n: 1,
           size: '1024x1024',
-          quality: 'auto', // 自动选择最佳质量
+          quality: 'hd', // 最高质量
           response_format: 'url'
         },
         {
