@@ -11,6 +11,7 @@ export default function KnowledgeCardResult() {
 
   useEffect(() => {
     try {
+      // 尝试从 eventChannel 获取数据
       const eventChannel = (Taro.getCurrentInstance().page as any)?.getOpenerEventChannel()
       if (eventChannel?.on) {
         eventChannel.on("result", async (data: { topic: string }) => {
@@ -19,8 +20,23 @@ export default function KnowledgeCardResult() {
           }
         })
       }
+      
+      // 尝试从 URL 参数获取数据（兼容 H5）
+      const query = Taro.getCurrentInstance().router?.params
+      if (query?.data) {
+        const data = JSON.parse(decodeURIComponent(query.data))
+        if (data?.imageUrl) {
+          setImageUrl(data.imageUrl)
+          setLoading(false)
+        } else if (data?.userContent) {
+          // 如果只有 userContent，重新调用生成
+          await generateCard(data.userContent)
+        }
+      }
     } catch (e) {
-      console.error("EventChannel error:", e)
+      console.error("获取数据失败:", e)
+      setError("获取数据失败")
+      setLoading(false)
     }
   }, [])
 
