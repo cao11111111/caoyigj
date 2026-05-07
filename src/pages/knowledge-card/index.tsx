@@ -66,7 +66,6 @@ export default function KnowledgeCardInput() {
               placeholder="请输入知识点内容..."
               value={content}
               onInput={(e: any) => setContent(e.detail.value)}
-              maxlength={500}
             />
           </View>
           
