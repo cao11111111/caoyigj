@@ -32,7 +32,7 @@ export default function KnowledgeCardResult() {
       const res = await Network.request({
         url: "/api/knowledge-card/generate",
         method: "POST",
-        data: { topic }
+        data: { userContent: topic }
       })
       
       console.log("生成结果:", res.data)
