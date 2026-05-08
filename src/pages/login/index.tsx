@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { View, Text } from '@tarojs/components'
+import { View, Text, Image } from '@tarojs/components'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import Taro from '@tarojs/taro'
@@ -138,9 +138,11 @@ export default function LoginPage() {
       {/* 主内容区 */}
       <View className="flex-1 flex flex-col items-center justify-center px-8">
         {/* Logo */}
-        <View className="w-24 h-24 rounded-3xl bg-blue-500 flex items-center justify-center mb-6">
-          <Text className="text text-4xl text-white font-bold">曹</Text>
-        </View>
+        <Image
+          src="https://code.coze.cn/api/sandbox/coze_coding/file/proxy?expire_time=-1&file_path=assets%2Fimage_20260508134139958.png&nonce=84090862-c7c5-4df3-af6d-5926c79363f4&project_id=7636683216082026538&sign=4b2e30ec79e23c89ce719c0dd6692ea6aa4876af8d9ddba9bebf4a6051195f8f"
+          className="w-24 h-24 rounded-full mb-6"
+          mode="aspectFill"
+        />
         
         {/* 标题 */}
         <Text className="text-3xl font-bold text-gray-800">曹一工具箱</Text>
