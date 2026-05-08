@@ -71,6 +71,63 @@ export default function LoginPage() {
     }
   }
 
+  // 微信授权登录 - 一键获取头像昵称并登录
+  const handleWechatAuth = async () => {
+    if (!agreePrivacy) {
+      setError('请先阅读并同意《用户服务协议》及《隐私政策》')
+      return
+    }
+    
+    // 微信环境下自动获取用户信息
+    if (Taro.getEnv() === Taro.ENV_TYPE.WEAPP) {
+      try {
+        // 获取 code
+        const loginRes = await Taro.login()
+        const code = loginRes.code || ''
+        
+        // 使用 button 的 open-type 获取头像，这里用默认头像
+        // 昵称需要用户点击输入框手动输入（微信限制）
+        setLoading(true)
+        setError('')
+        
+        const res = await Network.request({
+          url: '/api/auth/wechat-login',
+          method: 'POST',
+          data: { 
+            code,
+            avatar: wechatAvatar || '',
+            nickname: wechatNickname || '微信用户'
+          }
+        })
+        
+        if (res.data.code === 200) {
+          if (res.data.data.needVerify) {
+            setTempToken(res.data.data.tempToken)
+            setNeedVerify(true)
+          } else {
+            Taro.setStorageSync('token', res.data.data.token)
+            Taro.setStorageSync('userInfo', res.data.data.userInfo)
+            const userInfo = res.data.data.userInfo
+            if (!userInfo?.nickname) {
+              Taro.navigateTo({ url: '/pages/login/profile' })
+            } else {
+              Taro.switchTab({ url: '/pages/index/index' })
+            }
+          }
+        } else {
+          setError(res.data.msg || '登录失败')
+        }
+      } catch (err: any) {
+        setError(err.message || '登录失败')
+      } finally {
+        setLoading(false)
+      }
+    } else {
+      // H5 环境使用模拟登录
+      handleWechatLogin()
+    }
+  }
+
   const handleWechatLogin = async () => {
     if (!agreePrivacy) {
       setError('请先阅读并同意《用户服务协议》及《隐私政策》')
@@ -308,30 +365,35 @@ export default function LoginPage() {
                   </View>
                 ) : (
                   <View className="py-4">
-                    <Text className="block text-gray-600 mb-4 text-center">
-                      一键同步微信头像和昵称
+                    <Text className="block text-gray-600 mb-4 text-center text-sm">
+                      微信一键登录
                     </Text>
-                    {/* 头像选择 */}
-                    <View className="flex justify-center mb-4">
-                      <View className="relative">
-                        <Button
-                          open-type="chooseAvatar"
-                          onChooseAvatar={handleChooseAvatar}
-                          className="w-20 h-20 rounded-full bg-gray-100 p-0 border-none"
-                        >
-                          {wechatAvatar ? (
-                            <Image src={wechatAvatar} className="w-20 h-20 rounded-full" />
-                          ) : (
-                            <Text className="text-gray-400 text-3xl">+</Text>
-                          )}
-                        </Button>
+                    {error && (
+                      <Text className="text-red-500 text-sm text-center mb-4">{error}</Text>
+                    )}
+                    <Button
+                      open-type="chooseAvatar"
+                      onChooseAvatar={handleChooseAvatar}
+                      onClick={() => {
+                        if (wechatAvatar && wechatNickname) {
+                          handleWechatAuth()
+                        }
+                      }}
+                      className={`w-full h-12 rounded-full ${agreePrivacy ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-500'}`}
+                      disabled={!agreePrivacy || loading}
+                    >
+                      <View className="flex flex-row items-center">
+                        <Text className={`text-lg mr-2 ${agreePrivacy ? 'text-white' : 'text-gray-500'}`}>微信</Text>
+                        <Text className={`text-sm ${agreePrivacy ? 'text-white' : 'text-gray-500'}`}>
+                          {loading ? '登录中...' : wechatAvatar && wechatNickname ? '点击授权登录' : '点击获取头像'}
+                        </Text>
                       </View>
-                    </View>
-                    <Text className="block text-xs text-gray-400 text-center mb-3">
-                      点击选择微信头像
+                    </Button>
+                    <Text className="block text-xs text-gray-400 text-center mt-3">
+                      点击按钮选择微信头像
                     </Text>
                     {/* 昵称输入 */}
-                    <View className="bg-gray-50 rounded-xl px-4 py-3 mb-4">
+                    <View className="bg-gray-50 rounded-xl px-4 py-3 mt-4">
                       <Input
                         type="nickname"
                         className="w-full text-center"
@@ -340,18 +402,6 @@ export default function LoginPage() {
                         onInput={(e: any) => setWechatNickname(e.detail?.value || e.target?.value || '')}
                       />
                     </View>
-                    {error && (
-                      <Text className="text-red-500 text-sm text-center mb-4">{error}</Text>
-                    )}
-                    <Button
-                      onClick={handleWechatLogin}
-                      className={`w-full h-12 rounded-full ${agreePrivacy ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-500'}`}
-                      disabled={!agreePrivacy || loading}
-                    >
-                      <Text className={`text-base font-medium ${agreePrivacy ? 'text-white' : 'text-gray-500'}`}>
-                        {loading ? '登录中...' : '确认登录'}
-                      </Text>
-                    </Button>
                   </View>
                 )}
               </>
