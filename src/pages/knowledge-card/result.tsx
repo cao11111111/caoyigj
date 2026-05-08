@@ -3,7 +3,7 @@ import { View, Text, Image } from '@tarojs/components'
 import { Button } from '@/components/ui/button'
 import Taro from '@tarojs/taro'
 import { Network } from '@/network'
-import { ArrowLeft, Download } from 'lucide-react-taro'
+import { ArrowLeft, Download, RefreshCw, Check } from 'lucide-react-taro'
 import './result.css'
 
 export default function KnowledgeCardResult() {
@@ -12,15 +12,12 @@ export default function KnowledgeCardResult() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    // 获取传递的数据
     const getData = async () => {
       try {
-        // 尝试从 eventChannel 获取（小程序端）
         const eventChannel = Taro.getCurrentInstance().page?.getOpenerEventChannel?.()
         if (eventChannel) {
           const data = await new Promise((resolve) => {
             eventChannel.on('imageData', (res) => resolve(res))
-            // 超时处理
             setTimeout(() => resolve(null), 100)
           })
           if (data && (data as any).imageUrl) {
@@ -30,7 +27,6 @@ export default function KnowledgeCardResult() {
           }
         }
 
-        // 尝试从 URL 参数获取（H5端）
         const params = (Taro.getCurrentInstance().router?.params || {}) as any
         if (params.data) {
           try {
@@ -46,7 +42,6 @@ export default function KnowledgeCardResult() {
           }
         }
 
-        // 如果都没有，跳转到首页
         setError('未获取到图片，请重新生成')
       } catch (err) {
         console.error('获取数据失败:', err)
@@ -59,12 +54,10 @@ export default function KnowledgeCardResult() {
     getData()
   }, [])
 
-  // 保存图片
   const handleSave = async () => {
     if (!imageUrl) return
 
     try {
-      // 小程序端下载后保存
       if (Taro.getEnv() === Taro.ENV_TYPE.WEAPP) {
         Taro.showLoading({ title: '保存中...' })
         const { tempFilePath } = await Network.downloadFile({ url: imageUrl })
@@ -72,7 +65,6 @@ export default function KnowledgeCardResult() {
         Taro.hideLoading()
         Taro.showToast({ title: '保存成功', icon: 'success' })
       } else {
-        // H5端尝试直接下载
         const link = document.createElement('a')
         link.href = imageUrl
         link.download = `知识卡片_${Date.now()}.png`
@@ -85,7 +77,6 @@ export default function KnowledgeCardResult() {
     }
   }
 
-  // 返回上一页
   const handleGoBack = () => {
     Taro.navigateBack()
   }
@@ -93,14 +84,14 @@ export default function KnowledgeCardResult() {
   // 加载中
   if (loading) {
     return (
-      <View className="result-page">
-        <View className="loading-container">
-          <View className="loading-icon">
-            <View className="loading-spinner"></View>
+      <View className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
+        <View className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-6">
+          <View className="animate-spin">
+            <RefreshCw size={36} color="#2563EB" />
           </View>
-          <Text className="loading-text">正在生成知识卡片</Text>
-          <Text className="loading-hint">请稍候，马上就好</Text>
         </View>
+        <Text className="block text-slate-800 text-lg font-semibold">正在生成知识卡片</Text>
+        <Text className="block text-slate-400 text-sm mt-2">请稍候，马上就好</Text>
       </View>
     )
   }
@@ -108,55 +99,75 @@ export default function KnowledgeCardResult() {
   // 错误状态
   if (error || !imageUrl) {
     return (
-      <View className="result-page">
-        <View className="error-container">
-          <View className="error-icon">
-            <Text className="text-2xl">!</Text>
-          </View>
-          <Text className="error-text">{error || '未获取到图片'}</Text>
-          <Button className="error-btn" onClick={handleGoBack}>
-            返回重试
-          </Button>
+      <View className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
+        <View className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-6">
+          <Text className="text-red-500 text-3xl font-bold">!</Text>
         </View>
+        <Text className="block text-slate-800 text-lg font-semibold mb-2">生成失败</Text>
+        <Text className="block text-slate-400 text-sm text-center mb-8">{error || '未获取到图片'}</Text>
+        <Button className="bg-blue-500 text-white px-8 py-3 rounded-xl" onClick={handleGoBack}>
+          返回重试
+        </Button>
       </View>
     )
   }
 
   // 成功显示图片
   return (
-    <View className="result-page">
-      {/* 头部 */}
-      <View className="result-header">
-        <View style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <ArrowLeft size={20} color="#1e40af" onClick={handleGoBack} />
-          <Text className="result-title">知识卡片</Text>
+    <View className="min-h-screen bg-slate-50 flex flex-col">
+      {/* Header */}
+      <View className="bg-gradient-to-r from-blue-500 to-blue-600 px-4 pt-12 pb-4 flex-shrink-0 shadow-md">
+        <View className="flex items-center">
+          <ArrowLeft 
+            className="p-2 mr-2"
+            color="#fff" 
+            size={22}
+            onClick={handleGoBack}
+          />
+          <Text className="block text-white text-lg font-semibold">生成成功</Text>
         </View>
       </View>
 
-      {/* 图片展示 - 全屏自适应 */}
-      <View className="result-content">
-        <View className="image-card">
-          <View className="image-container">
-            <Image
-              className="result-image"
-              src={imageUrl}
-              mode="widthFix"
-              style={{ width: '100%' }}
-              showMenuByLongpress
-            />
-          </View>
+      {/* 成功提示 */}
+      <View className="bg-green-50 mx-4 mt-4 p-3 rounded-xl flex-row items-center">
+        <Check size={18} color="#10B981" className="mr-2" />
+        <Text className="block text-green-700 text-sm font-medium">知识卡片已生成</Text>
+      </View>
+
+      {/* 图片展示 */}
+      <View className="flex-1 p-4 flex items-center justify-center">
+        <View className="bg-white rounded-2xl shadow-lg p-3 w-full max-w-md">
+          <Image
+            className="w-full rounded-xl"
+            src={imageUrl}
+            mode="widthFix"
+            showMenuByLongpress
+          />
         </View>
       </View>
 
       {/* 底部操作 */}
-      <View className="result-footer">
-        <Button className="footer-btn btn-secondary" onClick={handleGoBack}>
-          再试一张
-        </Button>
-        <Button className="footer-btn btn-primary" onClick={handleSave}>
-          <Download size={16} color="#ffffff" style={{ marginRight: '6px' }} />
-          保存图片
-        </Button>
+      <View className="p-4 pb-8 flex-shrink-0">
+        <View className="flex gap-3">
+          <Button 
+            className="flex-1 py-4 rounded-xl border border-slate-200 bg-white" 
+            onClick={handleGoBack}
+          >
+            <View className="flex items-center justify-center">
+              <RefreshCw size={16} color="#475569" className="mr-2" />
+              <Text className="text-slate-600 text-sm font-medium">再试一张</Text>
+            </View>
+          </Button>
+          <Button 
+            className="flex-1 py-4 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 shadow-md shadow-blue-200" 
+            onClick={handleSave}
+          >
+            <View className="flex items-center justify-center">
+              <Download size={16} color="#ffffff" className="mr-2" />
+              <Text className="text-white text-sm font-medium">保存图片</Text>
+            </View>
+          </Button>
+        </View>
       </View>
     </View>
   )

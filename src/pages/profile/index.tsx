@@ -1,6 +1,6 @@
 import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
-import { User, Settings, CircleAlert, FileText, MessageSquare, LogOut } from 'lucide-react-taro'
+import { Settings, CircleAlert, FileText, MessageSquare, LogOut, ChevronRight, BookOpen, MessageCircle } from 'lucide-react-taro'
 import { useState, useEffect } from 'react'
 import { Network } from '@/network'
 import './index.config'
@@ -12,14 +12,6 @@ interface UserInfo {
   totalChats: number
 }
 
-interface MenuItem {
-  icon: any
-  title: string
-  desc?: string
-  showArrow?: boolean
-  onClick?: () => void
-}
-
 export default function Profile() {
   const [userInfo, setUserInfo] = useState<UserInfo>({
     name: '加载中...',
@@ -28,9 +20,7 @@ export default function Profile() {
     totalChats: 0
   })
 
-
   useEffect(() => {
-    // 检查登录状态
     const token = Taro.getStorageSync('token')
     if (!token) {
       Taro.reLaunch({ url: '/pages/login/index' })
@@ -67,83 +57,93 @@ export default function Profile() {
     })
   }
 
-  const menuItems: MenuItem[] = [
-    { icon: FileText, title: '我的知识卡片', desc: `${userInfo.totalCards} 张`, onClick: () => Taro.switchTab({ url: '/pages/history/index' }) },
-    { icon: MessageSquare, title: '我的对话', desc: `${userInfo.totalChats} 条`, onClick: () => Taro.switchTab({ url: '/pages/history/index' }) },
-    { icon: Settings, title: '设置', showArrow: true },
-    { icon: CircleAlert, title: '帮助与反馈', showArrow: true },
-    { icon: LogOut, title: '退出登录', onClick: handleLogout },
+  const menuItems = [
+    { icon: FileText, title: '我的知识卡片', desc: '查看已生成的卡片', onClick: () => Taro.switchTab({ url: '/pages/history/index' }) },
+    { icon: MessageSquare, title: '我的对话', desc: '查看对话记录', onClick: () => Taro.switchTab({ url: '/pages/history/index' }) },
+    { icon: Settings, title: '设置', desc: '应用设置', showArrow: true },
+    { icon: CircleAlert, title: '帮助与反馈', desc: '遇到问题？联系我们', showArrow: true },
   ]
 
   return (
     <View className="min-h-screen bg-slate-50 pb-20">
-      {/* Header */}
-      <View className="bg-blue-500 px-4 pt-12 pb-8">
-        <Text className="block text-white text-xl font-semibold mb-4">我的</Text>
+      {/* 顶部区域 */}
+      <View className="bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 px-5 pt-12 pb-8 relative overflow-hidden">
+        {/* 装饰 */}
+        <View className="absolute top-16 right-8 w-40 h-40 bg-white opacity-5 rounded-full" />
+        <View className="absolute bottom-4 left-4 w-24 h-24 bg-white opacity-5 rounded-full" />
         
-        {/* User Card */}
-        <View className="bg-white rounded-2xl p-4 flex items-center">
-          <View className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mr-4">
-            <User size={32} color="#2563eb" />
+        <View className="relative z-10">
+          <Text className="block text-white text-xl font-bold mb-5">我的</Text>
+          
+          {/* 用户卡片 */}
+          <View className="bg-white bg-opacity-20 rounded-2xl p-4 flex items-center backdrop-blur-sm">
+            <View className="w-16 h-16 rounded-full bg-white flex items-center justify-center mr-4 shadow-lg">
+              <Text className="text-2xl">👤</Text>
+            </View>
+            <View className="flex-1">
+              <Text className="block text-white text-xl font-bold">{userInfo.name}</Text>
+              <Text className="block text-blue-100 text-sm mt-1">曹一工具箱用户</Text>
+            </View>
           </View>
-          <View className="flex-1">
-            <Text className="block text-slate-800 text-lg font-semibold">{userInfo.name}</Text>
-            <Text className="block text-slate-500 text-sm mt-1">学校教师</Text>
-          </View>
-        </View>
-
-        {/* Stats */}
-        <View className="flex mt-4 gap-3">
-          <View className="flex-1 bg-white rounded-2xl p-4 text-center">
-            <Text className="block text-blue-500 text-2xl font-bold">{userInfo.totalCards}</Text>
-            <Text className="block text-slate-500 text-sm mt-1">知识卡片</Text>
-          </View>
-          <View className="flex-1 bg-white rounded-2xl p-4 text-center">
-            <Text className="block text-blue-500 text-2xl font-bold">{userInfo.totalChats}</Text>
-            <Text className="block text-slate-500 text-sm mt-1">对话次数</Text>
+          
+          {/* 统计 */}
+          <View className="flex gap-3 mt-4">
+            <View className="flex-1 bg-white bg-opacity-20 rounded-xl p-3 backdrop-blur-sm">
+              <View className="flex items-center justify-center">
+                <BookOpen size={16} color="#ffffff" />
+                <Text className="text-white text-xs ml-2">知识卡片</Text>
+              </View>
+              <Text className="block text-white text-2xl font-bold mt-1 text-center">{userInfo.totalCards}</Text>
+            </View>
+            <View className="flex-1 bg-white bg-opacity-20 rounded-xl p-3 backdrop-blur-sm">
+              <View className="flex items-center justify-center">
+                <MessageCircle size={16} color="#ffffff" />
+                <Text className="text-white text-xs ml-2">对话次数</Text>
+              </View>
+              <Text className="block text-white text-2xl font-bold mt-1 text-center">{userInfo.totalChats}</Text>
+            </View>
           </View>
         </View>
       </View>
 
-      {/* Menu */}
-      <View className="px-4 mt-4">
-        <View className="bg-white rounded-2xl overflow-hidden">
+      {/* 菜单列表 */}
+      <View className="px-4 -mt-3">
+        <View className="bg-white rounded-2xl shadow-md overflow-hidden">
           {menuItems.map((item, index) => (
             <View
               key={index}
               className={`p-4 flex items-center ${index !== menuItems.length - 1 ? 'border-b border-slate-100' : ''}`}
               onClick={item.onClick}
             >
-              <View className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center mr-3">
-                <item.icon size={18} color="#2563eb" />
+              <View className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center mr-3">
+                <item.icon size={20} color="#2563EB" />
               </View>
               <View className="flex-1">
                 <Text className="block text-slate-800 text-sm font-medium">{item.title}</Text>
-                {item.desc && (
-                  <Text className="block text-slate-400 text-xs mt-1">{item.desc}</Text>
-                )}
+                <Text className="block text-slate-400 text-xs mt-1">{item.desc}</Text>
               </View>
               {item.showArrow && (
-                <View className="text-slate-400">
-                  <Text className="text-slate-400 text-sm">›</Text>
-                </View>
+                <ChevronRight size={18} color="#CBD5E1" />
               )}
             </View>
           ))}
         </View>
       </View>
 
-      {/* Logout */}
-      <View className="px-4 mt-4">
-        <View className="bg-white rounded-2xl p-4 flex items-center justify-center">
-          <LogOut size={18} color="#ef4444" className="mr-2" />
+      {/* 退出登录 */}
+      <View className="px-4 mt-5">
+        <View 
+          className="bg-white rounded-2xl p-4 flex items-center justify-center shadow-sm"
+          onClick={handleLogout}
+        >
+          <LogOut size={18} color="#EF4444" className="mr-2" />
           <Text className="block text-red-500 text-sm font-medium">退出登录</Text>
         </View>
       </View>
 
-      {/* Version */}
+      {/* 版本信息 */}
       <View className="px-4 mt-8 text-center">
-        <Text className="block text-slate-400 text-xs">版本 1.0.0</Text>
+        <Text className="block text-slate-400 text-xs">曹一工具箱 v1.0.0</Text>
       </View>
     </View>
   )

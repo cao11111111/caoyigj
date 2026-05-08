@@ -12,7 +12,7 @@ export default defineAppConfig({
   window: {
     backgroundTextStyle: 'light',
     navigationBarBackgroundColor: '#FAFCFF',
-    navigationBarTitleText: '智能助手',
+    navigationBarTitleText: '曹一工具箱',
     navigationBarTextStyle: 'black'
   },
   tabBar: {
@@ -23,7 +23,7 @@ export default defineAppConfig({
     list: [
       {
         pagePath: 'pages/index/index',
-        text: '智能体',
+        text: '首页',
         iconPath: './assets/tabbar/message-circle.png',
         selectedIconPath: './assets/tabbar/message-circle-active.png'
       },

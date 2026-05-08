@@ -2,7 +2,7 @@ import Taro from '@tarojs/taro'
 import { View, Text } from '@tarojs/components'
 import { useState, useEffect } from 'react'
 import { Network } from '@/network'
-import { ChevronRight, Image as ImageIcon, BookOpen } from 'lucide-react-taro'
+import { Image as ImageIcon, BookOpen, Clock, BookMarked } from 'lucide-react-taro'
 import './index.config'
 
 interface ChatItem {
@@ -24,7 +24,6 @@ export default function History() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // 检查登录状态
     const token = Taro.getStorageSync('token')
     if (!token) {
       Taro.reLaunch({ url: '/pages/login/index' })
@@ -61,44 +60,67 @@ export default function History() {
 
   return (
     <View className="min-h-screen bg-slate-50 pb-20">
-      {/* Header */}
-      <View className="bg-blue-500 px-4 pt-12 pb-6">
-        <Text className="block text-white text-xl font-semibold">对话历史</Text>
+      {/* 顶部区域 */}
+      <View className="bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 px-5 pt-12 pb-6 relative overflow-hidden">
+        <View className="absolute top-14 right-8 w-36 h-36 bg-white opacity-5 rounded-full" />
+        <View className="absolute bottom-2 left-2 w-20 h-20 bg-white opacity-5 rounded-full" />
+        
+        <View className="relative z-10">
+          <View className="flex items-center">
+            <Clock size={24} color="#ffffff" />
+            <Text className="block text-white text-xl font-bold ml-2">对话历史</Text>
+          </View>
+        </View>
       </View>
 
-      {/* History List */}
+      {/* 历史列表 */}
       <View className="px-4 mt-4">
         {loading ? (
-          <View className="bg-white rounded-2xl p-8 text-center">
+          <View className="bg-white rounded-2xl p-8 text-center shadow-sm">
+            <View className="w-12 h-12 mx-auto mb-3 bg-slate-100 rounded-full flex items-center justify-center">
+              <Clock size={24} color="#CBD5E1" />
+            </View>
             <Text className="block text-slate-400 text-sm">加载中...</Text>
           </View>
         ) : groupedChats.length === 0 ? (
-          <View className="bg-white rounded-2xl p-8 text-center">
-            <Text className="block text-slate-400 text-sm">暂无历史记录</Text>
+          <View className="bg-white rounded-2xl p-8 text-center shadow-sm">
+            <View className="w-16 h-16 mx-auto mb-4 bg-slate-100 rounded-full flex items-center justify-center">
+              <BookMarked size={32} color="#CBD5E1" />
+            </View>
+            <Text className="block text-slate-500 text-base font-medium">暂无历史记录</Text>
+            <Text className="block text-slate-400 text-sm mt-2">点击首页快捷入口开始使用</Text>
           </View>
         ) : (
           groupedChats.map((group) => (
-            <View key={group.title} className="mb-4">
-              <Text className="block text-slate-500 text-sm font-medium mb-2">{group.title}</Text>
-              <View className="bg-white rounded-2xl overflow-hidden">
+            <View key={group.title} className="mb-5">
+              <View className="flex items-center mb-3">
+                <View className="w-2 h-2 bg-blue-500 rounded-full mr-2" />
+                <Text className="block text-slate-600 text-sm font-medium">{group.title}</Text>
+              </View>
+              <View className="bg-white rounded-2xl overflow-hidden shadow-sm">
                 {group.data.map((item, index) => (
                   <View
                     key={item.id}
                     className={`p-4 flex items-center ${index !== group.data.length - 1 ? 'border-b border-slate-100' : ''}`}
                     onClick={() => handleChatClick(item)}
                   >
-                    <View className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center mr-3">
+                    <View className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center mr-3">
                       {item.type === 'knowledge' && item.imageUrl ? (
-                        <ImageIcon size={18} color="#2563eb" />
+                        <ImageIcon size={22} color="#2563EB" />
                       ) : (
-                        <BookOpen size={18} color="#2563eb" />
+                        <BookOpen size={22} color="#2563EB" />
                       )}
                     </View>
                     <View className="flex-1 min-w-0">
                       <Text className="block text-slate-800 text-sm font-medium truncate">{item.title}</Text>
                       <Text className="block text-slate-400 text-xs mt-1 truncate">{item.preview}</Text>
                     </View>
-                    <ChevronRight size={16} color="#94a3b8" />
+                    <View className="flex flex-col items-end ml-3">
+                      <Text className="text-slate-400 text-xs">{item.time}</Text>
+                      <View className="bg-blue-50 px-2 py-1 rounded mt-1">
+                        <Text className="text-blue-500 text-xs">查看</Text>
+                      </View>
+                    </View>
                   </View>
                 ))}
               </View>
