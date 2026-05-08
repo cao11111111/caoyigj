@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input'
 import { User } from 'lucide-react-taro'
 import Taro from '@tarojs/taro'
 import { Network } from '@/network'
-import { WechatAvatarButton } from '@/components/WechatAvatarButton'
 
 export default function LoginPage() {
   const [showLogin, setShowLogin] = useState(false)
@@ -135,6 +134,30 @@ export default function LoginPage() {
       setError('')
       
       try {
+        // 获取微信头像
+        const avatarRes = await new Promise<{ avatarUrl: string }>((resolve, reject) => {
+          ;(Taro as any).chooseAvatar?.({
+            success: resolve,
+            fail: reject,
+          })
+        })
+        
+        // 获取微信昵称
+        const nickname = wechatNickname || '微信用户'
+        const avatar = avatarRes?.avatarUrl || ''
+        
+        if (!avatar) {
+          setError('请选择头像')
+          setLoading(false)
+          return
+        }
+        
+        if (!nickname || nickname === '微信用户') {
+          setError('请输入昵称')
+          setLoading(false)
+          return
+        }
+        
         const loginRes = await Taro.login()
         const code = loginRes.code || ''
         
@@ -143,8 +166,8 @@ export default function LoginPage() {
           method: 'POST',
           data: { 
             code,
-            avatar: '',
-            nickname: '',
+            avatar,
+            nickname,
             quickLogin: true
           }
         })
@@ -157,6 +180,7 @@ export default function LoginPage() {
             Taro.setStorageSync('token', res.data.data.token)
             Taro.setStorageSync('userInfo', res.data.data.userInfo)
             const userInfo = res.data.data.userInfo
+            closeLogin()
             if (!userInfo?.nickname) {
               Taro.navigateTo({ url: '/pages/login/profile' })
             } else {
@@ -433,28 +457,8 @@ export default function LoginPage() {
                     )}
 
                     {useWechatInfo ? (
-                      // 一键登录模式 - 使用微信头像和昵称
+                      // 一键登录模式 - 直接使用微信头像和昵称
                       <>
-                        {/* 微信头像选择按钮 - 仅在微信小程序环境渲染 */}
-                        {typeof navigator !== 'undefined' && navigator.userAgent?.toLowerCase?.()?.includes('miniprogram') ? (
-                          <WechatAvatarButton
-                            avatar={wechatAvatar}
-                            agreePrivacy={agreePrivacy}
-                            loading={loading}
-                            onAvatarChange={setWechatAvatar}
-                          />
-                        ) : (
-                          <Button
-                            className={`w-full h-12 rounded-full mb-3 ${agreePrivacy ? 'bg-green-500' : 'bg-gray-300'}`}
-                            disabled
-                          >
-                            <Text className={`text-base font-medium ${agreePrivacy ? 'text-white' : 'text-gray-500'}`}>
-                              请在微信小程序中使用
-                            </Text>
-                          </Button>
-                        )}
-                        
-                        {/* 昵称输入 */}
                         <View className="bg-gray-50 rounded-xl px-4 py-3 mb-3">
                           <Input
                             type="nickname"
@@ -464,14 +468,13 @@ export default function LoginPage() {
                             onInput={(e: any) => setWechatNickname(e.detail?.value || e.target?.value || '')}
                           />
                         </View>
-                        
                         <Button
                           onClick={handleWechatQuickLogin}
-                          className={`w-full h-12 rounded-full ${agreePrivacy && wechatAvatar && wechatNickname ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-500'}`}
-                          disabled={!agreePrivacy || !wechatAvatar || !wechatNickname || loading}
+                          className={`w-full h-12 rounded-full ${agreePrivacy ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-500'}`}
+                          disabled={!agreePrivacy || loading}
                         >
-                          <Text className={`text-base font-medium ${agreePrivacy && wechatAvatar && wechatNickname ? 'text-white' : 'text-gray-500'}`}>
-                            {loading ? '登录中...' : '确认登录'}
+                          <Text className={`text-base font-medium ${agreePrivacy ? 'text-white' : 'text-gray-500'}`}>
+                            {loading ? '登录中...' : '微信一键登录'}
                           </Text>
                         </Button>
                       </>
