@@ -1,7 +1,7 @@
 {
   "miniprogramRoot": "./dist",
-  "projectname": "智能体助手",
-  "description": "公司内部智能体集成小程序",
+  "projectname": "曹一工具箱",
+  "description": "曹一工具箱 - 知识卡片生成工具",
   "appid": "",
   "setting": {
     "urlCheck": false,
