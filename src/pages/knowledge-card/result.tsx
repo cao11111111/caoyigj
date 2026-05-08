@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
-import { View, Text, Image, Button } from '@tarojs/components'
+import { View, Text, Image } from '@tarojs/components'
+import { Button } from '@/components/ui/button'
 import Taro from '@tarojs/taro'
+import { Network } from '@/network'
 import { ArrowLeft, Download } from 'lucide-react-taro'
 import './result.css'
 
@@ -14,7 +16,7 @@ export default function KnowledgeCardResult() {
     const getData = async () => {
       try {
         // 尝试从 eventChannel 获取（小程序端）
-        const eventChannel = Taro.getCurrentInstance().page?.getOpenerEventChannel()
+        const eventChannel = Taro.getCurrentInstance().page?.getOpenerEventChannel?.()
         if (eventChannel) {
           const data = await new Promise((resolve) => {
             eventChannel.on('imageData', (res) => resolve(res))
@@ -65,7 +67,7 @@ export default function KnowledgeCardResult() {
       // 小程序端下载后保存
       if (Taro.getEnv() === Taro.ENV_TYPE.WEAPP) {
         Taro.showLoading({ title: '保存中...' })
-        const { tempFilePath } = await Taro.downloadFile({ url: imageUrl })
+        const { tempFilePath } = await Network.downloadFile({ url: imageUrl })
         await Taro.saveImageToPhotosAlbum({ filePath: tempFilePath })
         Taro.hideLoading()
         Taro.showToast({ title: '保存成功', icon: 'success' })
@@ -131,7 +133,7 @@ export default function KnowledgeCardResult() {
         </View>
       </View>
 
-      {/* 图片展示 */}
+      {/* 图片展示 - 全屏自适应 */}
       <View className="result-content">
         <View className="image-card">
           <View className="image-container">
@@ -139,6 +141,7 @@ export default function KnowledgeCardResult() {
               className="result-image"
               src={imageUrl}
               mode="widthFix"
+              style={{ width: '100%' }}
               showMenuByLongpress
             />
           </View>
@@ -151,7 +154,7 @@ export default function KnowledgeCardResult() {
           再试一张
         </Button>
         <Button className="footer-btn btn-primary" onClick={handleSave}>
-          <Download size={16} style={{ marginRight: '6px' }} />
+          <Download size={16} color="#ffffff" style={{ marginRight: '6px' }} />
           保存图片
         </Button>
       </View>
