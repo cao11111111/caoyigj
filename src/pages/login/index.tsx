@@ -159,25 +159,51 @@ export default function LoginPage() {
 
       {/* 底部登录方式 */}
       <View className="px-6 pb-12">
+        {/* 隐私政策勾选框 - 首页必须勾选 */}
+        <View 
+          className="flex flex-row items-start mb-4 p-3 bg-gray-50 rounded-lg"
+          onClick={() => setAgreePrivacy(!agreePrivacy)}
+        >
+          <View 
+            className="w-5 h-5 border-2 border-gray-300 rounded flex items-center justify-center mr-2 mt-0.5"
+          >
+            {agreePrivacy && (
+              <Text className="text-blue-500 text-sm">✓</Text>
+            )}
+          </View>
+          <View className="flex-1">
+            <Text className="text-xs text-gray-500 leading-5">
+              我已阅读并同意
+              <Text className="text-blue-500">《用户服务协议》</Text>
+              和
+              <Text className="text-blue-500">《隐私政策》</Text>
+            </Text>
+          </View>
+        </View>
+        
         <View className="space-y-3">
           <Button
             onClick={() => openLogin('account')}
-            className="w-full bg-blue-500 text-white h-12 rounded-full"
+            className={`w-full h-12 rounded-full ${agreePrivacy ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-500'}`}
+            disabled={!agreePrivacy}
           >
             <Text className="text-base font-medium">账号登录</Text>
           </Button>
           
           <Button
             onClick={() => openLogin('wechat')}
-            className="w-full bg-green-500 text-white h-12 rounded-full"
+            className={`w-full h-12 rounded-full ${agreePrivacy ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-500'}`}
+            disabled={!agreePrivacy}
           >
             <Text className="text-base font-medium">微信登录</Text>
           </Button>
         </View>
         
-        <Text className="block text-center text-xs text-gray-400 mt-6">
-          登录即表示同意《用户协议》和《隐私政策》
-        </Text>
+        {!agreePrivacy && (
+          <Text className="block text-center text-xs text-gray-400 mt-4">
+            请先勾选同意用户协议和隐私政策
+          </Text>
+        )}
       </View>
 
       {/* 登录弹窗 - 简化版 */}
