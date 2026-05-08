@@ -1,5 +1,6 @@
 import { Controller, Post, Body, Get, Headers } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/common';
+import { getSupabaseClient } from '@/storage/database/supabase-client';
 
 interface LoginDto {
   username: string;
@@ -21,68 +22,154 @@ interface ProfileDto {
   subject: string;
 }
 
-// 模拟数据库
-const tempTokens = new Map<string, { openid?: string; username?: string; createdAt: number }>();
-const users = new Map<string, any>();
 const VALID_VERIFY_CODE = '123456';
 
 @ApiTags('认证')
 @Controller('auth')
 export class AuthController {
+  // 获取 Supabase 客户端
+  private getClient() {
+    return getSupabaseClient();
+  }
+
   @Post('login')
   @ApiOperation({ summary: '用户登录' })
-  login(@Body() body: LoginDto) {
+  async login(@Body() body: LoginDto) {
     console.log('登录请求:', body);
+    const client = this.getClient();
+    
+    // 查找用户
+    const { data: existingUser, error: findError } = await client
+      .from('users')
+      .select('*')
+      .eq('username', body.username)
+      .maybeSingle();
+    
+    if (findError) {
+      console.error('查询用户失败:', findError);
+      throw new Error(`查询失败: ${findError.message}`);
+    }
     
     // 固定测试账号：111 / 123456
     if (body.username === '111' && body.password === '123456') {
+      const token = `token_${Date.now()}`;
+      
+      if (existingUser) {
+        // 更新 token
+        const { error: updateError } = await client
+          .from('users')
+          .update({ token })
+          .eq('id', existingUser.id);
+        
+        if (updateError) {
+          console.error('更新token失败:', updateError);
+        }
+        
+        return {
+          code: 200,
+          msg: '登录成功',
+          data: {
+            needVerify: false,
+            token,
+            user: {
+              id: existingUser.id,
+              username: existingUser.username,
+              nickname: existingUser.nickname,
+              school: existingUser.school,
+              subject: existingUser.subject,
+              avatar: existingUser.avatar,
+            },
+          },
+        };
+      } else {
+        // 创建新用户
+        const { data: newUser, error: insertError } = await client
+          .from('users')
+          .insert({
+            username: body.username,
+            password: body.password,
+            token,
+            nickname: '用户111',
+          })
+          .select()
+          .single();
+        
+        if (insertError) {
+          console.error('创建用户失败:', insertError);
+          throw new Error(`创建用户失败: ${insertError.message}`);
+        }
+        
+        return {
+          code: 200,
+          msg: '登录成功',
+          data: {
+            needVerify: false,
+            token,
+            user: {
+              id: newUser.id,
+              username: newUser.username,
+              nickname: newUser.nickname,
+              school: newUser.school,
+              subject: newUser.subject,
+              avatar: newUser.avatar,
+            },
+          },
+        };
+      }
+    }
+    
+    // 演示模式：任意账号密码都能登录
+    if (existingUser) {
+      const token = `token_${Date.now()}`;
+      await client
+        .from('users')
+        .update({ token })
+        .eq('id', existingUser.id);
+      
       return {
         code: 200,
         msg: '登录成功',
         data: {
           needVerify: false,
-          token: `token_${Date.now()}`,
+          token,
           user: {
-            id: 1,
-            username: '111',
-            nickname: '用户111',
-            avatar: '',
+            id: existingUser.id,
+            username: existingUser.username,
+            nickname: existingUser.nickname,
+            school: existingUser.school,
+            subject: existingUser.subject,
+            avatar: existingUser.avatar,
           },
         },
       };
     }
     
-    // 演示模式：任意账号密码都能登录
-    const isNewUser = body.username.includes('new') || body.username.includes('test');
+    // 新用户需要验证
+    const tempToken = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
-    if (isNewUser) {
-      // 新用户需要验证
-      const tempToken = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      tempTokens.set(tempToken, { username: body.username, createdAt: Date.now() });
-      
-      return {
-        code: 200,
-        msg: '需要验证',
-        data: {
-          needVerify: true,
-          tempToken: tempToken,
-        },
-      };
+    // 创建临时用户记录
+    const { data: tempUser, error: tempError } = await client
+      .from('users')
+      .insert({
+        username: body.username,
+        password: body.password,
+        token: tempToken,
+      })
+      .select()
+      .single();
+    
+    if (tempError) {
+      console.error('创建临时用户失败:', tempError);
+      throw new Error(`创建临时用户失败: ${tempError.message}`);
     }
     
-    // 老用户直接登录
     return {
       code: 200,
-      msg: '登录成功',
+      msg: '需要验证',
       data: {
-        needVerify: false,
-        token: `token_${Date.now()}`,
-        user: {
-          id: 1,
-          username: body.username,
-          nickname: body.username,
-          avatar: '',
-        },
+        needVerify: true,
+        tempToken: tempUser.token,
+        userId: tempUser.id,
       },
     };
   }
@@ -91,19 +178,9 @@ export class AuthController {
   @ApiOperation({ summary: '微信登录' })
   async wechatLogin(@Body() body: WechatLoginDto) {
     console.log('微信登录请求, code:', body.code);
+    const client = this.getClient();
     
     try {
-      // 实际项目中需要调用微信接口获取 openid
-      // const wxRes = await axios.get(`https://api.weixin.qq.com/sns/jscode2session`, {
-      //   params: {
-      //     appid: 'YOUR_APPID',
-      //     secret: 'YOUR_SECRET',
-      //     js_code: body.code,
-      //     grant_type: 'authorization_code'
-      //   }
-      // });
-      // const openid = wxRes.data.openid;
-      
       // 演示模式：使用 code 模拟 openid
       const openid = `mock_openid_${body.code}`;
       
@@ -112,16 +189,85 @@ export class AuthController {
       
       if (isNewUser) {
         const tempToken = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        tempTokens.set(tempToken, { openid, createdAt: Date.now() });
+        
+        // 创建临时微信用户
+        const { data: tempUser, error: tempError } = await client
+          .from('users')
+          .insert({
+            username: `wechat_${openid}`,
+            token: tempToken,
+            nickname: '微信用户',
+          })
+          .select()
+          .single();
+        
+        if (tempError) {
+          console.error('创建微信用户失败:', tempError);
+          throw new Error(`创建微信用户失败: ${tempError.message}`);
+        }
         
         return {
           code: 200,
           msg: '需要验证',
           data: {
             needVerify: true,
-            tempToken: tempToken,
+            tempToken: tempUser.token,
+            userId: tempUser.id,
           },
         };
+      }
+      
+      // 老用户直接登录
+      const token = `token_${Date.now()}_${openid}`;
+      
+      // 查找或创建微信用户
+      const { data: existingWxUser, error: findError } = await client
+        .from('users')
+        .select('*')
+        .eq('username', `wechat_${openid}`)
+        .maybeSingle();
+      
+      if (findError) {
+        console.error('查询微信用户失败:', findError);
+      }
+      
+      if (existingWxUser) {
+        await client
+          .from('users')
+          .update({ token })
+          .eq('id', existingWxUser.id);
+        
+        return {
+          code: 200,
+          msg: '登录成功',
+          data: {
+            needVerify: false,
+            token,
+            user: {
+              id: existingWxUser.id,
+              username: existingWxUser.username,
+              nickname: existingWxUser.nickname,
+              school: existingWxUser.school,
+              subject: existingWxUser.subject,
+              avatar: existingWxUser.avatar,
+            },
+          },
+        };
+      }
+      
+      const { data: newWxUser, error: insertError } = await client
+        .from('users')
+        .insert({
+          username: `wechat_${openid}`,
+          token,
+          nickname: '微信用户',
+        })
+        .select()
+        .single();
+      
+      if (insertError) {
+        console.error('创建微信用户失败:', insertError);
+        throw new Error(`创建微信用户失败: ${insertError.message}`);
       }
       
       return {
@@ -129,12 +275,14 @@ export class AuthController {
         msg: '登录成功',
         data: {
           needVerify: false,
-          token: `token_${Date.now()}_${openid}`,
+          token,
           user: {
-            id: 1,
-            username: '微信用户',
-            nickname: '微信用户',
-            avatar: '',
+            id: newWxUser.id,
+            username: newWxUser.username,
+            nickname: newWxUser.nickname,
+            school: newWxUser.school,
+            subject: newWxUser.subject,
+            avatar: newWxUser.avatar,
           },
         },
       };
@@ -150,25 +298,26 @@ export class AuthController {
 
   @Post('verify')
   @ApiOperation({ summary: '验证码验证' })
-  verify(@Body() body: VerifyDto) {
+  async verify(@Body() body: VerifyDto) {
     console.log('验证请求:', body);
+    const client = this.getClient();
     
-    const tempData = tempTokens.get(body.tempToken);
+    // 查找临时用户
+    const { data: tempUser, error: findError } = await client
+      .from('users')
+      .select('*')
+      .eq('token', body.tempToken)
+      .maybeSingle();
     
-    if (!tempData) {
+    if (findError) {
+      console.error('查询用户失败:', findError);
+      throw new Error(`查询失败: ${findError.message}`);
+    }
+    
+    if (!tempUser) {
       return {
         code: 400,
         msg: '无效的临时令牌',
-        data: null,
-      };
-    }
-    
-    // 检查临时令牌是否过期（10分钟）
-    if (Date.now() - tempData.createdAt > 10 * 60 * 1000) {
-      tempTokens.delete(body.tempToken);
-      return {
-        code: 400,
-        msg: '临时令牌已过期，请重新登录',
         data: null,
       };
     }
@@ -182,21 +331,19 @@ export class AuthController {
       };
     }
     
-    // 验证成功，删除临时令牌
-    tempTokens.delete(body.tempToken);
-    
-    // 生成新的正式 token
+    // 验证成功，生成新的正式 token
     const newToken = `token_${Date.now()}_verified`;
     
-    // 保存用户信息
-    users.set(newToken, {
-      id: 1,
-      username: tempData.username || tempData.openid || '新用户',
-      nickname: '',
-      school: '',
-      subject: '',
-      avatar: '',
-    });
+    // 更新用户 token
+    const { error: updateError } = await client
+      .from('users')
+      .update({ token: newToken })
+      .eq('id', tempUser.id);
+    
+    if (updateError) {
+      console.error('更新token失败:', updateError);
+      throw new Error(`更新token失败: ${updateError.message}`);
+    }
     
     return {
       code: 200,
@@ -204,10 +351,12 @@ export class AuthController {
       data: {
         token: newToken,
         user: {
-          id: 1,
-          username: tempData.username || tempData.openid || '新用户',
-          nickname: '',
-          avatar: '',
+          id: tempUser.id,
+          username: tempUser.username,
+          nickname: tempUser.nickname || '',
+          school: tempUser.school || '',
+          subject: tempUser.subject || '',
+          avatar: tempUser.avatar || '',
         },
       },
     };
@@ -215,7 +364,17 @@ export class AuthController {
 
   @Post('logout')
   @ApiOperation({ summary: '用户登出' })
-  logout() {
+  async logout(@Headers('authorization') auth: string) {
+    const client = this.getClient();
+    const token = auth?.replace('Bearer ', '');
+    
+    if (token) {
+      await client
+        .from('users')
+        .update({ token: null })
+        .eq('token', token);
+    }
+    
     return {
       code: 200,
       msg: '登出成功',
@@ -228,10 +387,60 @@ export class AuthController {
 @ApiTags('用户')
 @Controller('user')
 export class UserController {
+  private getClient() {
+    return getSupabaseClient();
+  }
+
   @Post('profile')
   @ApiOperation({ summary: '保存用户信息' })
-  saveProfile(@Body() body: ProfileDto) {
+  async saveProfile(@Body() body: ProfileDto & { token?: string }) {
     console.log('保存用户信息:', body);
+    const client = this.getClient();
+    const token = body.token;
+    
+    if (!token) {
+      return {
+        code: 400,
+        msg: '未登录',
+        data: null,
+      };
+    }
+    
+    // 查找用户
+    const { data: user, error: findError } = await client
+      .from('users')
+      .select('*')
+      .eq('token', token)
+      .maybeSingle();
+    
+    if (findError) {
+      console.error('查询用户失败:', findError);
+      throw new Error(`查询失败: ${findError.message}`);
+    }
+    
+    if (!user) {
+      return {
+        code: 400,
+        msg: '用户不存在',
+        data: null,
+      };
+    }
+    
+    // 更新用户信息
+    const { error: updateError } = await client
+      .from('users')
+      .update({
+        nickname: body.nickname,
+        school: body.school,
+        subject: body.subject,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', user.id);
+    
+    if (updateError) {
+      console.error('更新用户信息失败:', updateError);
+      throw new Error(`更新失败: ${updateError.message}`);
+    }
     
     return {
       code: 200,
@@ -246,20 +455,63 @@ export class UserController {
 
   @Get('info')
   @ApiOperation({ summary: '获取用户信息' })
-  getUserInfo() {
+  async getUserInfo(@Headers('authorization') auth: string) {
+    const client = this.getClient();
+    const token = auth?.replace('Bearer ', '');
+    
+    if (!token) {
+      return {
+        code: 401,
+        msg: '未登录',
+        data: null,
+      };
+    }
+    
+    // 查找用户
+    const { data: user, error: findError } = await client
+      .from('users')
+      .select('*')
+      .eq('token', token)
+      .maybeSingle();
+    
+    if (findError) {
+      console.error('查询用户失败:', findError);
+      throw new Error(`查询失败: ${findError.message}`);
+    }
+    
+    if (!user) {
+      return {
+        code: 404,
+        msg: '用户不存在',
+        data: null,
+      };
+    }
+    
+    // 统计对话数量
+    const { count: cardCount, error: cardError } = await client
+      .from('conversations')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('type', 'knowledge_card');
+    
+    const { count: chatCount, error: chatError } = await client
+      .from('conversations')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id);
+    
     return {
       code: 200,
       msg: 'success',
       data: {
-        id: 1,
-        username: '111',
-        nickname: '用户111',
-        school: 'XX学校',
-        subject: '教师',
-        avatar: '',
-        name: '用户111',
-        totalCards: 12,
-        totalChats: 8
+        id: user.id,
+        username: user.username,
+        nickname: user.nickname || user.username,
+        school: user.school || '',
+        subject: user.subject || '',
+        avatar: user.avatar || '',
+        name: user.nickname || user.username,
+        totalCards: cardCount || 0,
+        totalChats: chatCount || 0,
       },
     };
   }

@@ -1,20 +1,66 @@
-import { Controller, Get, Post, Body, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, Headers } from '@nestjs/common';
+import { ApiTags, ApiOperation } from '@nestjs/common';
+import { getSupabaseClient } from '@/storage/database/supabase-client';
 
-@Controller('conversation')
+@ApiTags('对话')
+@Controller('conversations')
 export class ConversationController {
+  private getClient() {
+    return getSupabaseClient();
+  }
+
+  // 获取用户ID
+  private async getUserId(token: string): Promise<number | null> {
+    const client = this.getClient();
+    const { data: user, error } = await client
+      .from('users')
+      .select('id')
+      .eq('token', token)
+      .maybeSingle();
+    
+    if (error || !user) {
+      return null;
+    }
+    return user.id;
+  }
+
   @Post('save')
+  @ApiOperation({ summary: '保存对话' })
   async saveConversation(
-    @Body() body: { type: string; title: string; imageUrl?: string }
+    @Body() body: { type: string; title: string; preview?: string; imageUrl?: string; token?: string },
+    @Headers('authorization') auth: string
   ) {
-    // 模拟保存对话，返回成功
-    const conversation = {
-      id: Date.now().toString(),
-      type: body.type,
-      title: body.title,
-      imageUrl: body.imageUrl,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    console.log('保存对话:', body);
+    const client = this.getClient();
+    const token = body.token || auth?.replace('Bearer ', '');
+    
+    const userId = await this.getUserId(token || '');
+    
+    if (!userId) {
+      return {
+        code: 401,
+        msg: '未登录',
+        data: null,
+      };
+    }
+    
+    const { data: conversation, error } = await client
+      .from('conversations')
+      .insert({
+        user_id: userId,
+        type: body.type || 'chat',
+        title: body.title,
+        preview: body.preview || '',
+        image_url: body.imageUrl || '',
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('保存对话失败:', error);
+      throw new Error(`保存失败: ${error.message}`);
+    }
+    
     return {
       code: 200,
       msg: 'success',
@@ -23,57 +69,115 @@ export class ConversationController {
   }
 
   @Get('recent')
-  async getRecentConversations(@Query('limit') limit: string = '5') {
-    // 模拟最近对话数据
-    const recentConversations = [
-      {
-        id: '1',
-        type: 'knowledge-card',
-        title: '光合作用',
-        imageUrl: 'https://storage.fonedis.cc/cdn/20260508/test1.png',
-        createdAt: '2026-05-08T10:00:00Z',
-      },
-      {
-        id: '2',
-        type: 'knowledge-card',
-        title: '牛顿定律',
-        imageUrl: 'https://storage.fonedis.cc/cdn/20260508/test2.png',
-        createdAt: '2026-05-07T15:30:00Z',
-      },
-      {
-        id: '3',
-        type: 'knowledge-card',
-        title: '勾股定理',
-        imageUrl: 'https://storage.fonedis.cc/cdn/20260508/test3.png',
-        createdAt: '2026-05-06T09:15:00Z',
-      },
-    ];
+  @ApiOperation({ summary: '获取最近对话' })
+  async getRecentConversations(
+    @Query('limit') limit: string = '5',
+    @Headers('authorization') auth: string
+  ) {
+    const client = this.getClient();
+    const token = auth?.replace('Bearer ', '');
+    
+    const userId = await this.getUserId(token || '');
+    
+    if (!userId) {
+      return {
+        code: 401,
+        msg: '未登录',
+        data: [],
+      };
+    }
+    
+    const { data: conversations, error } = await client
+      .from('conversations')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(parseInt(limit) || 5);
+    
+    if (error) {
+      console.error('查询最近对话失败:', error);
+      throw new Error(`查询失败: ${error.message}`);
+    }
+    
+    // 转换为前端期望的格式
+    const result = (conversations || []).map((c: any) => ({
+      id: c.id,
+      type: c.type,
+      title: c.title,
+      preview: c.preview,
+      imageUrl: c.image_url,
+      time: c.created_at,
+    }));
+    
     return {
       code: 200,
       msg: 'success',
-      data: recentConversations.slice(0, parseInt(limit) || 5),
+      data: result,
     };
   }
 
   @Get('history')
-  async getHistory(@Query('page') page: string = '1', @Query('pageSize') pageSize: string = '10') {
-    // 模拟历史记录数据
-    const allHistory = [
-      { id: '1', title: '光合作用', type: 'knowledge-card', createdAt: '2026-05-08T10:00:00Z', imageUrl: 'https://storage.fonedis.cc/cdn/20260508/test1.png' },
-      { id: '2', title: '牛顿定律', type: 'knowledge-card', createdAt: '2026-05-07T15:30:00Z', imageUrl: 'https://storage.fonedis.cc/cdn/20260508/test2.png' },
-      { id: '3', title: '勾股定理', type: 'knowledge-card', createdAt: '2026-05-06T09:15:00Z', imageUrl: 'https://storage.fonedis.cc/cdn/20260508/test3.png' },
-      { id: '4', title: '化学反应', type: 'knowledge-card', createdAt: '2026-05-05T14:20:00Z', imageUrl: 'https://storage.fonedis.cc/cdn/20260508/test4.png' },
-      { id: '5', title: '电磁感应', type: 'knowledge-card', createdAt: '2026-05-04T11:45:00Z', imageUrl: 'https://storage.fonedis.cc/cdn/20260508/test5.png' },
-    ];
+  @ApiOperation({ summary: '获取历史记录' })
+  async getHistory(
+    @Query('page') page: string = '1',
+    @Query('pageSize') pageSize: string = '10',
+    @Headers('authorization') auth: string
+  ) {
+    const client = this.getClient();
+    const token = auth?.replace('Bearer ', '');
+    
+    const userId = await this.getUserId(token || '');
+    
+    if (!userId) {
+      return {
+        code: 401,
+        msg: '未登录',
+        data: { list: [], total: 0, page: 1, pageSize: 10 },
+      };
+    }
+    
     const p = parseInt(page) || 1;
     const size = parseInt(pageSize) || 10;
     const start = (p - 1) * size;
+    
+    // 获取总数
+    const { count, error: countError } = await client
+      .from('conversations')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId);
+    
+    if (countError) {
+      console.error('统计失败:', countError);
+    }
+    
+    // 获取分页数据
+    const { data: conversations, error } = await client
+      .from('conversations')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .range(start, start + size - 1);
+    
+    if (error) {
+      console.error('查询历史失败:', error);
+      throw new Error(`查询失败: ${error.message}`);
+    }
+    
+    const list = (conversations || []).map((c: any) => ({
+      id: c.id,
+      type: c.type,
+      title: c.title,
+      preview: c.preview,
+      imageUrl: c.image_url,
+      time: c.created_at,
+    }));
+    
     return {
       code: 200,
       msg: 'success',
       data: {
-        list: allHistory.slice(start, start + size),
-        total: allHistory.length,
+        list,
+        total: count || 0,
         page: p,
         pageSize: size,
       },
@@ -81,15 +185,53 @@ export class ConversationController {
   }
 
   @Get('stats')
-  async getStats() {
+  @ApiOperation({ summary: '获取统计数据' })
+  async getStats(@Headers('authorization') auth: string) {
+    const client = this.getClient();
+    const token = auth?.replace('Bearer ', '');
+    
+    const userId = await this.getUserId(token || '');
+    
+    if (!userId) {
+      return {
+        code: 401,
+        msg: '未登录',
+        data: null,
+      };
+    }
+    
+    // 统计总数
+    const { count: totalCount, error: totalError } = await client
+      .from('conversations')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId);
+    
+    // 统计知识卡片
+    const { count: cardCount, error: cardError } = await client
+      .from('conversations')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('type', 'knowledge_card');
+    
+    // 统计本月
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+    
+    const { count: monthCount, error: monthError } = await client
+      .from('conversations')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .gte('created_at', startOfMonth.toISOString());
+    
     return {
       code: 200,
       msg: 'success',
       data: {
-        totalConversations: 42,
-        totalCards: 38,
-        thisMonth: 12,
-        favoriteCount: 5,
+        totalConversations: totalCount || 0,
+        totalCards: cardCount || 0,
+        thisMonth: monthCount || 0,
+        favoriteCount: 0,
       },
     };
   }
