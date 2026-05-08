@@ -7,38 +7,25 @@ export class KnowledgeCardService {
   private readonly imageApiKey = process.env.IMAGE_API_KEY || 'sk-w0V20fsgKFWm1tiAMUi4Mof7KREdI1AoFDdfOp2GDnOjzplt';
 
   async generate(userContent: string): Promise<string> {
-    // GPT Image 2 - 手绘风格知识卡片
-    const prompt = `Hand-drawn style knowledge card`;
+    console.log('[KnowledgeCard] Generating with user content:', userContent.substring(0, 200));
+    
+    // 手绘风格知识卡片
+    const stylePrompt = 'Hand-drawn style knowledge card, Chinese text with sketched pencil style and soft watercolor touches on warm beige paper background. Include hand-drawn icons, notebook sketch style with arrows and bullet points. Educational and supportive tone.';
+    
+    // 用户内容 + 风格描述
+    const fullPrompt = `${userContent}\n\n${stylePrompt}`;
+    
+    console.log('[KnowledgeCard] Full prompt length:', fullPrompt.length);
 
-    console.log('[KnowledgeCard] Generating with user content:', userContent.substring(0, 100));
-    
-    const imageUrl = await this.generateImage(userContent, prompt);
-    console.log('[KnowledgeCard] Generated image URL:', imageUrl);
-    
-    return imageUrl;
-  }
-
-  private async generateImage(userContent: string, stylePrompt: string): Promise<string> {
-    console.log('[KnowledgeCard] Generating image...');
-    
     try {
-      // 先总结用户内容，再生成图片
-      const fullPrompt = `${userContent}
-
-${stylePrompt}`;
-      
-      console.log('[KnowledgeCard] Full prompt length:', fullPrompt.length);
-
       const response = await axios.post(
         `${this.imageApiBase}/images/generations`,
         {
           model: 'gpt-image-2',
           prompt: fullPrompt,
           n: 1,
-          size: '1024x1536',  // 竖版 3:4 比例
-          quality: 'medium',   // medium 质量，文字渲染更准确
-          response_format: 'url',
-          format: 'png'
+          size: '1024x1024',
+          response_format: 'url'
         },
         {
           headers: {
@@ -57,6 +44,7 @@ ${stylePrompt}`;
       if (imageData && Array.isArray(imageData) && imageData.length > 0) {
         const imageUrl = imageData[0]?.url || imageData[0]?.b64_json;
         if (imageUrl) {
+          console.log('[KnowledgeCard] Generated image URL:', imageUrl);
           return imageUrl;
         }
       }
