@@ -22,6 +22,14 @@ interface ProfileDto {
   subject: string;
 }
 
+interface WatchAdDto {
+  token: string;
+}
+
+interface UseQuotaDto {
+  token: string;
+}
+
 const VALID_VERIFY_CODE = '123456';
 
 @ApiTags('认证')
@@ -56,14 +64,10 @@ export class AuthController {
       
       if (existingUser) {
         // 更新 token
-        const { error: updateError } = await client
+        await client
           .from('users')
           .update({ token })
           .eq('id', existingUser.id);
-        
-        if (updateError) {
-          console.error('更新token失败:', updateError);
-        }
         
         return {
           code: 200,
@@ -78,11 +82,12 @@ export class AuthController {
               school: existingUser.school,
               subject: existingUser.subject,
               avatar: existingUser.avatar,
+              quota: existingUser.quota || 0,
             },
           },
         };
       } else {
-        // 创建新用户
+        // 创建新用户，默认给10次额度
         const { data: newUser, error: insertError } = await client
           .from('users')
           .insert({
@@ -90,6 +95,7 @@ export class AuthController {
             password: body.password,
             token,
             nickname: '用户111',
+            quota: 10, // 新用户默认10次额度
           })
           .select()
           .single();
@@ -112,6 +118,7 @@ export class AuthController {
               school: newUser.school,
               subject: newUser.subject,
               avatar: newUser.avatar,
+              quota: newUser.quota,
             },
           },
         };
@@ -139,6 +146,7 @@ export class AuthController {
             school: existingUser.school,
             subject: existingUser.subject,
             avatar: existingUser.avatar,
+            quota: existingUser.quota || 0,
           },
         },
       };
@@ -154,6 +162,7 @@ export class AuthController {
         username: body.username,
         password: body.password,
         token: tempToken,
+        quota: 10, // 新用户默认10次额度
       })
       .select()
       .single();
@@ -197,6 +206,7 @@ export class AuthController {
             username: `wechat_${openid}`,
             token: tempToken,
             nickname: '微信用户',
+            quota: 10, // 新用户默认10次额度
           })
           .select()
           .single();
@@ -250,6 +260,7 @@ export class AuthController {
               school: existingWxUser.school,
               subject: existingWxUser.subject,
               avatar: existingWxUser.avatar,
+              quota: existingWxUser.quota || 0,
             },
           },
         };
@@ -261,6 +272,7 @@ export class AuthController {
           username: `wechat_${openid}`,
           token,
           nickname: '微信用户',
+          quota: 10, // 新用户默认10次额度
         })
         .select()
         .single();
@@ -283,6 +295,7 @@ export class AuthController {
             school: newWxUser.school,
             subject: newWxUser.subject,
             avatar: newWxUser.avatar,
+            quota: newWxUser.quota,
           },
         },
       };
@@ -357,6 +370,7 @@ export class AuthController {
           school: tempUser.school || '',
           subject: tempUser.subject || '',
           avatar: tempUser.avatar || '',
+          quota: tempUser.quota || 0,
         },
       },
     };
@@ -512,6 +526,177 @@ export class UserController {
         name: user.nickname || user.username,
         totalCards: cardCount || 0,
         totalChats: chatCount || 0,
+        quota: user.quota || 0, // 返回额度
+      },
+    };
+  }
+
+  @Get('quota')
+  @ApiOperation({ summary: '获取用户额度' })
+  async getQuota(@Headers('authorization') auth: string) {
+    const client = this.getClient();
+    const token = auth?.replace('Bearer ', '');
+    
+    if (!token) {
+      return {
+        code: 401,
+        msg: '未登录',
+        data: null,
+      };
+    }
+    
+    // 查找用户
+    const { data: user, error: findError } = await client
+      .from('users')
+      .select('quota')
+      .eq('token', token)
+      .maybeSingle();
+    
+    if (findError) {
+      console.error('查询用户失败:', findError);
+      throw new Error(`查询失败: ${findError.message}`);
+    }
+    
+    if (!user) {
+      return {
+        code: 404,
+        msg: '用户不存在',
+        data: null,
+      };
+    }
+    
+    return {
+      code: 200,
+      msg: 'success',
+      data: {
+        quota: user.quota || 0,
+      },
+    };
+  }
+
+  @Post('watch-ad')
+  @ApiOperation({ summary: '观看广告增加额度' })
+  async watchAd(@Body() body: WatchAdDto) {
+    const client = this.getClient();
+    const { token } = body;
+    
+    if (!token) {
+      return {
+        code: 401,
+        msg: '未登录',
+        data: null,
+      };
+    }
+    
+    // 查找用户
+    const { data: user, error: findError } = await client
+      .from('users')
+      .select('quota')
+      .eq('token', token)
+      .maybeSingle();
+    
+    if (findError) {
+      console.error('查询用户失败:', findError);
+      throw new Error(`查询失败: ${findError.message}`);
+    }
+    
+    if (!user) {
+      return {
+        code: 404,
+        msg: '用户不存在',
+        data: null,
+      };
+    }
+    
+    // 增加额度：看一个广告增加2次
+    const currentQuota = user.quota || 0;
+    const newQuota = currentQuota + 2;
+    
+    const { error: updateError } = await client
+      .from('users')
+      .update({ quota: newQuota })
+      .eq('token', token);
+    
+    if (updateError) {
+      console.error('更新额度失败:', updateError);
+      throw new Error(`更新失败: ${updateError.message}`);
+    }
+    
+    return {
+      code: 200,
+      msg: '观看成功，额度+2',
+      data: {
+        quota: newQuota,
+      },
+    };
+  }
+
+  @Post('use-quota')
+  @ApiOperation({ summary: '使用额度' })
+  async useQuota(@Body() body: UseQuotaDto) {
+    const client = this.getClient();
+    const { token } = body;
+    
+    if (!token) {
+      return {
+        code: 401,
+        msg: '未登录',
+        data: null,
+      };
+    }
+    
+    // 查找用户
+    const { data: user, error: findError } = await client
+      .from('users')
+      .select('quota')
+      .eq('token', token)
+      .maybeSingle();
+    
+    if (findError) {
+      console.error('查询用户失败:', findError);
+      throw new Error(`查询失败: ${findError.message}`);
+    }
+    
+    if (!user) {
+      return {
+        code: 404,
+        msg: '用户不存在',
+        data: null,
+      };
+    }
+    
+    // 检查额度
+    const currentQuota = user.quota || 0;
+    if (currentQuota <= 0) {
+      return {
+        code: 400,
+        msg: '额度不足，请观看广告',
+        data: {
+          quota: 0,
+          enough: false,
+        },
+      };
+    }
+    
+    // 扣减1次额度
+    const newQuota = currentQuota - 1;
+    
+    const { error: updateError } = await client
+      .from('users')
+      .update({ quota: newQuota })
+      .eq('token', token);
+    
+    if (updateError) {
+      console.error('更新额度失败:', updateError);
+      throw new Error(`更新失败: ${updateError.message}`);
+    }
+    
+    return {
+      code: 200,
+      msg: '额度使用成功',
+      data: {
+        quota: newQuota,
+        enough: newQuota > 0,
       },
     };
   }

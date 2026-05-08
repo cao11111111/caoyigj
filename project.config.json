@@ -1,16 +1,23 @@
 {
   "miniprogramRoot": "./dist",
-  "projectname": "coze-mini-program",
-  "description": "test",
-  "appid": "touristappid",
+  "projectname": "智能体助手",
+  "description": "公司内部智能体集成小程序",
+  "appid": "",
   "setting": {
-    "urlCheck": true,
-    "es6": false,
-    "enhance": false,
-    "compileHotReLoad": false,
-    "postcss": false,
-    "minified": false
+    "urlCheck": false,
+    "es6": true,
+    "enhance": true,
+    "compileHotReLoad": true,
+    "postcss": true,
+    "minified": false,
+    "bigPackageSizeSupport": true
   },
   "compileType": "miniprogram",
-  "packOptions": { "ignore": [{ "type": "folder", "value": "./assets" }] }
+  "libVersion": "3.4.6",
+  "packOptions": {
+    "ignore": [
+      { "type": "folder", "value": "./assets" },
+      { "type": "folder", "value": "./node_modules" }
+    ]
+  }
 }

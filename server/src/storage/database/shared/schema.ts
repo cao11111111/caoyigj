@@ -13,6 +13,7 @@ export const users = pgTable(
     subject: varchar("subject", { length: 50 }),
     avatar: varchar("avatar", { length: 500 }),
     token: varchar("token", { length: 200 }),
+    quota: integer("quota").default(0).notNull(),  // 额度，默认0
     created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updated_at: timestamp("updated_at", { withTimezone: true }),
   },
