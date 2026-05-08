@@ -56,7 +56,7 @@ export default function LoginPage() {
   }
 
   const handleWechatLogin = async () => {
-    if (!privacyChecked) {
+    if (!agreePrivacy) {
       setError('请先阅读并同意《用户服务协议》及《隐私政策》')
       return
     }
