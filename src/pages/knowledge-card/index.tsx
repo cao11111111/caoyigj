@@ -21,12 +21,22 @@ export default function KnowledgeCardInput() {
       return
     }
 
+    // 获取登录token
+    const token = Taro.getStorageSync('token')
+    if (!token) {
+      Taro.showToast({ title: '请先登录', icon: 'none' })
+      return
+    }
+
     setLoading(true)
     try {
       const res: any = await Network.request({
         url: '/api/knowledge-card/generate',
         method: 'POST',
-        header: { 'Content-Type': 'application/json' },
+        header: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         data: { userContent: content },
         timeout: 600000
       })
