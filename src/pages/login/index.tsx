@@ -15,8 +15,13 @@ export default function LoginPage() {
   const [tempToken, setTempToken] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [agreePrivacy, setAgreePrivacy] = useState(false)
 
   const handleAccountLogin = async () => {
+    if (!agreePrivacy) {
+      setError('请先阅读并同意用户协议和隐私政策')
+      return
+    }
     if (!username || !password) {
       setError('请输入账号和密码')
       return
@@ -51,6 +56,10 @@ export default function LoginPage() {
   }
 
   const handleWechatLogin = async () => {
+    if (!privacyChecked) {
+      setError('请先阅读并同意《用户服务协议》及《隐私政策》')
+      return
+    }
     setLoading(true)
     setError('')
     try {
@@ -188,54 +197,79 @@ export default function LoginPage() {
             </View>
 
             {!needVerify ? (
-              loginType === 'account' ? (
-                <View className="space-y-4">
-                  <View className="bg-gray-50 rounded-xl px-4 py-3">
-                    <Input
-                      className="w-full"
-                      placeholder="请输入账号"
-                      value={username}
-                      onInput={(e: any) => setUsername(e.target.value)}
-                    />
-                  </View>
-                  <View className="bg-gray-50 rounded-xl px-4 py-3">
-                    <Input
-                      className="w-full"
-                      placeholder="请输入密码"
-                      value={password}
-                      onInput={(e: any) => setPassword(e.target.value)}
-                    />
-                  </View>
-                  {error && (
-                    <Text className="text-red-500 text-sm text-center">{error}</Text>
-                  )}
-                  <Button
-                    onClick={handleAccountLogin}
-                    className="w-full bg-blue-500 text-white h-12 rounded-full mt-2"
+              <>
+                {/* 隐私政策勾选 */}
+                <View className="flex flex-row items-start mb-4">
+                  <View 
+                    className="w-5 h-5 border-2 border-gray-300 rounded flex items-center justify-center mr-2 mt-0.5"
+                    onClick={() => setAgreePrivacy(!agreePrivacy)}
                   >
-                    <Text className="text-base font-medium">
-                      {loading ? '登录中...' : '登录'}
+                    {agreePrivacy && (
+                      <Text className="text-blue-500 text-sm">✓</Text>
+                    )}
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-xs text-gray-500">
+                      我已阅读并同意
+                      <Text className="text-blue-500">《用户服务协议》</Text>
+                      和
+                      <Text className="text-blue-500">《隐私政策》</Text>
                     </Text>
-                  </Button>
+                  </View>
                 </View>
-              ) : (
-                <View className="text-center py-4">
-                  <Text className="block text-gray-600 mb-4">
-                    即将唤起微信授权
-                  </Text>
-                  {error && (
-                    <Text className="text-red-500 text-sm text-center mb-4">{error}</Text>
-                  )}
-                  <Button
-                    onClick={handleWechatLogin}
-                    className="w-full bg-green-500 text-white h-12 rounded-full"
-                  >
-                    <Text className="text-base font-medium">
-                      {loading ? '登录中...' : '确认登录'}
+
+                {loginType === 'account' ? (
+                  <View className="space-y-4">
+                    <View className="bg-gray-50 rounded-xl px-4 py-3">
+                      <Input
+                        className="w-full"
+                        placeholder="请输入账号"
+                        value={username}
+                        onInput={(e: any) => setUsername(e.target.value)}
+                      />
+                    </View>
+                    <View className="bg-gray-50 rounded-xl px-4 py-3">
+                      <Input
+                        className="w-full"
+                        placeholder="请输入密码"
+                        password
+                        value={password}
+                        onInput={(e: any) => setPassword(e.target.value)}
+                      />
+                    </View>
+                    {error && (
+                      <Text className="text-red-500 text-sm text-center">{error}</Text>
+                    )}
+                    <Button
+                      onClick={handleAccountLogin}
+                      className={`w-full h-12 rounded-full mt-2 ${agreePrivacy ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-500'}`}
+                      disabled={!agreePrivacy || loading}
+                    >
+                      <Text className={`text-base font-medium ${agreePrivacy ? 'text-white' : 'text-gray-500'}`}>
+                        {loading ? '登录中...' : '登录'}
+                      </Text>
+                    </Button>
+                  </View>
+                ) : (
+                  <View className="text-center py-4">
+                    <Text className="block text-gray-600 mb-4">
+                      即将唤起微信授权
                     </Text>
-                  </Button>
-                </View>
-              )
+                    {error && (
+                      <Text className="text-red-500 text-sm text-center mb-4">{error}</Text>
+                    )}
+                    <Button
+                      onClick={handleWechatLogin}
+                      className={`w-full h-12 rounded-full ${agreePrivacy ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-500'}`}
+                      disabled={!agreePrivacy || loading}
+                    >
+                      <Text className={`text-base font-medium ${agreePrivacy ? 'text-white' : 'text-gray-500'}`}>
+                        {loading ? '登录中...' : '确认登录'}
+                      </Text>
+                    </Button>
+                  </View>
+                )}
+              </>
             ) : (
               <View className="space-y-4">
                 <Text className="block text-center text-sm text-gray-500">
