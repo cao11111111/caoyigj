@@ -9,9 +9,10 @@ import './index.config'
 interface LoginModalProps {
   show: boolean
   onClose: () => void
+  onSuccess?: () => void
 }
 
-export default function LoginModal({ show, onClose }: LoginModalProps) {
+export default function LoginModal({ show, onClose, onSuccess }: LoginModalProps) {
   const [loginType, setLoginType] = useState<'account' | 'wechat'>('account')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -136,7 +137,11 @@ export default function LoginModal({ show, onClose }: LoginModalProps) {
     Taro.setStorageSync('userInfo', data.user)
     setLoading(false)
     onClose()
-    Taro.redirectTo({ url: '/pages/login/profile' })
+    if (onSuccess) {
+      onSuccess()
+    } else {
+      Taro.redirectTo({ url: '/pages/login/profile' })
+    }
   }
 
   if (!show) return null
