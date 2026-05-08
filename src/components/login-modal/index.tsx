@@ -145,12 +145,12 @@ export default function LoginModal({ show, onClose }: LoginModalProps) {
   if (!show) return null
 
   return (
-    <View className="fixed inset-0 z-50 flex items-center justify-center p-6">
+    <View style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
       {/* 遮罩层 */}
-      <View className="absolute inset-0 bg-black bg-opacity-50" onClick={onClose} />
+      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)' }} onClick={onClose} />
       
       {/* 弹窗内容 */}
-      <View className="relative bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl">
+      <View style={{ position: 'relative', backgroundColor: '#fff', borderRadius: '16px', width: '100%', maxWidth: '320px', padding: '24px', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 12, elevation: 8 }}>
         {/* 关闭按钮 */}
         <View className="absolute top-4 right-4" onClick={onClose}>
           <X size={20} color="#64748B" />
