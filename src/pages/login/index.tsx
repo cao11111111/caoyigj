@@ -20,9 +20,53 @@ export default function Login() {
   const handleWechatLogin = async () => {
     // 检查是否支持微信登录
     const isWeapp = Taro.getEnv() === Taro.ENV_TYPE.WEAPP
+    const isH5 = Taro.getEnv() === Taro.ENV_TYPE.WEB
     
+    // H5 端模拟微信登录
+    if (isH5) {
+      setLoading(true)
+      try {
+        // H5 端模拟：直接使用模拟 code
+        const mockCode = 'h5_mock_code_' + Date.now()
+        console.log('H5 模拟微信登录 code:', mockCode)
+
+        const res = await Network.request({
+          url: '/api/auth/wechat-login',
+          method: 'POST',
+          data: { code: mockCode }
+        })
+        
+        console.log('微信登录响应:', res.data)
+
+        if (res.data.code === 200) {
+          const data = res.data.data
+          
+          if (data.needVerify) {
+            setTempToken(data.tempToken)
+            setShowVerify(true)
+          } else {
+            Taro.setStorageSync('token', data.token)
+            Taro.setStorageSync('userInfo', data.user)
+            Taro.showToast({ title: '登录成功', icon: 'success' })
+            setTimeout(() => {
+              Taro.switchTab({ url: '/pages/index/index' })
+            }, 1000)
+          }
+        } else {
+          Taro.showToast({ title: res.data.msg || '登录失败', icon: 'none' })
+        }
+      } catch (err) {
+        console.error('登录失败:', err)
+        Taro.showToast({ title: '登录失败，请重试', icon: 'none' })
+      } finally {
+        setLoading(false)
+      }
+      return
+    }
+
+    // 抖音小程序端
     if (!isWeapp) {
-      Taro.showToast({ title: '微信登录仅支持小程序端', icon: 'none' })
+      Taro.showToast({ title: '请在微信或抖音小程序中使用微信登录', icon: 'none' })
       return
     }
 
@@ -57,11 +101,9 @@ export default function Login() {
         const data = res.data.data
         
         if (data.needVerify) {
-          // 新用户需要验证
           setTempToken(data.tempToken)
           setShowVerify(true)
         } else {
-          // 老用户直接登录
           Taro.setStorageSync('token', data.token)
           Taro.setStorageSync('userInfo', data.user)
           Taro.showToast({ title: '登录成功', icon: 'success' })
