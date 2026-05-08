@@ -27,10 +27,14 @@ export default function ProfileSetup() {
     }
 
     setLoading(true)
+    const token = Taro.getStorageSync('token')
     try {
       const res = await Network.request({
         url: '/api/user/profile',
         method: 'POST',
+        header: {
+          'Authorization': `Bearer ${token}`
+        },
         data: { nickname, school, subject }
       })
 

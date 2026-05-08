@@ -33,19 +33,53 @@ export default function History() {
   }, [])
 
   const fetchHistory = async () => {
+    const token = Taro.getStorageSync('token')
     try {
       const res = await Network.request({
         url: '/api/conversations/history',
-        method: 'GET'
+        method: 'GET',
+        header: {
+          'Authorization': `Bearer ${token}`
+        }
       })
       if (res.data?.code === 200) {
-        setGroupedChats(res.data.data || [])
+        const list = res.data.data?.list || []
+        // 按日期分组
+        const grouped = groupByDate(list)
+        setGroupedChats(grouped)
       }
     } catch (e) {
       console.error('获取历史记录失败', e)
     } finally {
       setLoading(false)
     }
+  }
+
+  // 按日期分组
+  const groupByDate = (list: ChatItem[]) => {
+    const groups: { [key: string]: ChatItem[] } = {}
+    list.forEach(item => {
+      const date = new Date(item.time)
+      const today = new Date()
+      const yesterday = new Date(today)
+      yesterday.setDate(yesterday.getDate() - 1)
+      
+      let label = ''
+      if (date.toDateString() === today.toDateString()) {
+        label = '今天'
+      } else if (date.toDateString() === yesterday.toDateString()) {
+        label = '昨天'
+      } else {
+        label = `${date.getMonth() + 1}月${date.getDate()}日`
+      }
+      
+      if (!groups[label]) {
+        groups[label] = []
+      }
+      groups[label].push(item)
+    })
+    
+    return Object.entries(groups).map(([title, data]) => ({ title, data }))
   }
 
   const handleChatClick = (chat: ChatItem) => {

@@ -8,6 +8,7 @@ import './result.css'
 
 export default function KnowledgeCardResult() {
   const [imageUrl, setImageUrl] = useState('')
+  const [title, setTitle] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -22,6 +23,9 @@ export default function KnowledgeCardResult() {
           })
           if (data && (data as any).imageUrl) {
             setImageUrl((data as any).imageUrl)
+            setTitle((data as any).title || '知识卡片')
+            // 保存到历史记录
+            saveToHistory((data as any).imageUrl, (data as any).title || '知识卡片')
             setLoading(false)
             return
           }
@@ -34,6 +38,9 @@ export default function KnowledgeCardResult() {
             const data = JSON.parse(decoded)
             if (data.imageUrl) {
               setImageUrl(data.imageUrl)
+              setTitle(data.title || '知识卡片')
+              // 保存到历史记录
+              saveToHistory(data.imageUrl, data.title || '知识卡片')
               setLoading(false)
               return
             }
@@ -53,6 +60,31 @@ export default function KnowledgeCardResult() {
 
     getData()
   }, [])
+
+  // 保存到历史记录
+  const saveToHistory = async (imgUrl: string, cardTitle: string) => {
+    const token = Taro.getStorageSync('token')
+    if (!token) return
+    
+    try {
+      await Network.request({
+        url: '/api/conversations/save',
+        method: 'POST',
+        header: {
+          'Authorization': `Bearer ${token}`
+        },
+        data: {
+          type: 'knowledge',
+          title: cardTitle,
+          preview: '知识卡片',
+          imageUrl: imgUrl
+        }
+      })
+      console.log('已保存到历史记录')
+    } catch (e) {
+      console.error('保存历史记录失败', e)
+    }
+  }
 
   const handleSave = async () => {
     if (!imageUrl) return
