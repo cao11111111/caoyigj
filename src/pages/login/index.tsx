@@ -6,6 +6,7 @@ import Taro from '@tarojs/taro'
 import { Network } from '@/network'
 
 export default function LoginPage() {
+  const [showLogin, setShowLogin] = useState(false)
   const [loginType, setLoginType] = useState<'account' | 'wechat'>('account')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -36,7 +37,7 @@ export default function LoginPage() {
           setNeedVerify(true)
         } else {
           Taro.setStorageSync('token', res.data.data.token)
-          Taro.setStorageSync('userInfo', res.data.data.user)
+          Taro.setStorageSync('userInfo', res.data.data.userInfo)
           Taro.switchTab({ url: '/pages/index/index' })
         }
       } else {
@@ -53,53 +54,33 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
     try {
-      // 小程序端使用 wx.login
+      let code = ''
+      
       if (Taro.getEnv() === Taro.ENV_TYPE.WEAPP) {
         const loginRes = await Taro.login()
-        if (!loginRes.code) {
-          throw new Error('获取微信授权失败')
-        }
-        const res = await Network.request({
-          url: '/api/auth/wechat-login',
-          method: 'POST',
-          data: { code: loginRes.code }
-        })
-        
-        if (res.data.code === 200) {
-          if (res.data.data.needVerify) {
-            setTempToken(res.data.data.tempToken)
-            setNeedVerify(true)
-            setLoginType('account')
-          } else {
-            Taro.setStorageSync('token', res.data.data.token)
-            Taro.setStorageSync('userInfo', res.data.data.user)
-            Taro.switchTab({ url: '/pages/index/index' })
-          }
+        code = loginRes.code || ''
+      } else {
+        code = 'h5_mock_code_' + Date.now()
+      }
+
+      const res = await Network.request({
+        url: '/api/auth/wechat-login',
+        method: 'POST',
+        data: { code }
+      })
+      console.log('微信登录响应:', res.data)
+      
+      if (res.data.code === 200) {
+        if (res.data.data.needVerify) {
+          setTempToken(res.data.data.tempToken)
+          setNeedVerify(true)
         } else {
-          setError(res.data.msg || '登录失败')
+          Taro.setStorageSync('token', res.data.data.token)
+          Taro.setStorageSync('userInfo', res.data.data.userInfo)
+          Taro.switchTab({ url: '/pages/index/index' })
         }
       } else {
-        // H5端演示模式
-        const mockCode = 'h5_demo_' + Date.now()
-        const res = await Network.request({
-          url: '/api/auth/wechat-login',
-          method: 'POST',
-          data: { code: mockCode }
-        })
-        
-        if (res.data.code === 200) {
-          if (res.data.data.needVerify) {
-            setTempToken(res.data.data.tempToken)
-            setNeedVerify(true)
-            setLoginType('account')
-          } else {
-            Taro.setStorageSync('token', res.data.data.token)
-            Taro.setStorageSync('userInfo', res.data.data.user)
-            Taro.switchTab({ url: '/pages/index/index' })
-          }
-        } else {
-          setError(res.data.msg || '登录失败')
-        }
+        setError(res.data.msg || '登录失败')
       }
     } catch (e: any) {
       setError(e.message || '网络错误')
@@ -137,153 +118,154 @@ export default function LoginPage() {
     }
   }
 
+  const openLogin = (type: 'account' | 'wechat') => {
+    setLoginType(type)
+    setShowLogin(true)
+    setError('')
+    setVerifyCode('')
+    setNeedVerify(false)
+    setUsername('')
+    setPassword('')
+  }
+
+  const closeLogin = () => {
+    setShowLogin(false)
+    setError('')
+  }
+
   return (
-    <View style={{ minHeight: '100vh', backgroundColor: '#ffffff' }}>
-      {/* 顶部区域 */}
-      <View style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '80px', paddingBottom: '40px' }}>
+    <View className="min-h-screen bg-white flex flex-col relative">
+      {/* 主内容区 */}
+      <View className="flex-1 flex flex-col items-center justify-center px-8">
         {/* Logo */}
         <Image
           src="https://code.coze.cn/api/sandbox/coze_coding/file/proxy?expire_time=-1&file_path=assets%2Fimage_20260508134139958.png&nonce=84090862-c7c5-4df3-af6d-5926c79363f4&project_id=7636683216082026538&sign=4b2e30ec79e23c89ce719c0dd6692ea6aa4876af8d9ddba9bebf4a6051195f8f"
-          style={{ width: '96px', height: '96px', borderRadius: '48px', marginBottom: '24px' }}
+          className="w-24 h-24 rounded-full mb-6"
           mode="aspectFill"
         />
         
         {/* 标题 */}
-        <Text style={{ fontSize: '28px', fontWeight: 'bold', color: '#1f2937' }}>曹一工具箱</Text>
+        <Text className="text-3xl font-bold text-gray-800">曹一工具箱</Text>
       </View>
 
-      {/* 登录表单区域 */}
-      <View style={{ padding: '0 24px' }}>
-        {/* 登录方式切换 */}
-        {!needVerify && (
-          <View style={{ display: 'flex', backgroundColor: '#f3f4f6', borderRadius: '12px', padding: '4px', marginBottom: '24px' }}>
-            <View 
-              style={{ 
-                flex: 1, 
-                padding: '12px', 
-                borderRadius: '8px', 
-                textAlign: 'center',
-                backgroundColor: loginType === 'account' ? '#2563eb' : 'transparent',
-              }}
-              onClick={() => setLoginType('account')}
-            >
-              <Text style={{ 
-                color: loginType === 'account' ? '#ffffff' : '#6b7280',
-                fontSize: '16px',
-                fontWeight: loginType === 'account' ? '600' : '400'
-              }}>账号登录</Text>
-            </View>
-            <View 
-              style={{ 
-                flex: 1, 
-                padding: '12px', 
-                borderRadius: '8px', 
-                textAlign: 'center',
-                backgroundColor: loginType === 'wechat' ? '#2563eb' : 'transparent',
-              }}
-              onClick={() => setLoginType('wechat')}
-            >
-              <Text style={{ 
-                color: loginType === 'wechat' ? '#ffffff' : '#6b7280',
-                fontSize: '16px',
-                fontWeight: loginType === 'wechat' ? '600' : '400'
-              }}>微信登录</Text>
-            </View>
-          </View>
-        )}
-
-        {/* 验证码表单 */}
-        {needVerify ? (
-          <View>
-            <View style={{ backgroundColor: '#f9fafb', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
-              <Input
-                style={{ width: '100%', fontSize: '18px', textAlign: 'center' }}
-                placeholder="请输入验证码"
-                value={verifyCode}
-                onInput={(e: any) => setVerifyCode(e.target.value)}
-                maxlength={6}
-              />
-            </View>
-            <Text style={{ fontSize: '14px', color: '#6b7280', textAlign: 'center', marginBottom: '16px' }}>
-              演示验证码：123456
-            </Text>
-            {error ? (
-              <Text style={{ color: '#ef4444', fontSize: '14px', textAlign: 'center', marginBottom: '16px' }}>{error}</Text>
-            ) : null}
-            <Button
-              onClick={handleVerify}
-              style={{ width: '100%', backgroundColor: '#2563eb', color: '#ffffff', height: '48px', borderRadius: '24px' }}
-            >
-              <Text style={{ fontSize: '16px', fontWeight: '500' }}>
-                {loading ? '验证中...' : '验证'}
-              </Text>
-            </Button>
-          </View>
-        ) : loginType === 'account' ? (
-          /* 账号登录表单 */
-          <View>
-            <View style={{ backgroundColor: '#f9fafb', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
-              <Input
-                style={{ width: '100%', fontSize: '16px' }}
-                placeholder="请输入账号"
-                value={username}
-                onInput={(e: any) => setUsername(e.target.value)}
-              />
-            </View>
-            <View style={{ backgroundColor: '#f9fafb', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
-              <Input
-                style={{ width: '100%', fontSize: '16px' }}
-                placeholder="请输入密码"
-                value={password}
-                onInput={(e: any) => setPassword(e.target.value)}
-                password
-              />
-            </View>
-            {error ? (
-              <Text style={{ color: '#ef4444', fontSize: '14px', textAlign: 'center', marginBottom: '16px' }}>{error}</Text>
-            ) : null}
-            <Button
-              onClick={handleAccountLogin}
-              style={{ width: '100%', backgroundColor: '#2563eb', color: '#ffffff', height: '48px', borderRadius: '24px' }}
-            >
-              <Text style={{ fontSize: '16px', fontWeight: '500' }}>
-                {loading ? '登录中...' : '登录'}
-              </Text>
-            </Button>
-          </View>
-        ) : (
-          /* 微信登录表单 */
-          <View style={{ textAlign: 'center', paddingTop: '40px' }}>
-            <View style={{ marginBottom: '24px' }}>
-              <Text style={{ fontSize: '32px' }}>👆</Text>
-            </View>
-            <Text style={{ fontSize: '16px', color: '#374151', marginBottom: '8px', display: 'block' }}>
-              点击下方按钮进行微信授权登录
-            </Text>
-            <Text style={{ fontSize: '14px', color: '#9ca3af', marginBottom: '24px', display: 'block' }}>
-              新用户需验证手机号
-            </Text>
-            {error ? (
-              <Text style={{ color: '#ef4444', fontSize: '14px', textAlign: 'center', marginBottom: '16px' }}>{error}</Text>
-            ) : null}
-            <Button
-              onClick={handleWechatLogin}
-              style={{ width: '100%', backgroundColor: '#22c55e', color: '#ffffff', height: '48px', borderRadius: '24px' }}
-            >
-              <Text style={{ fontSize: '16px', fontWeight: '500' }}>
-                {loading ? '登录中...' : '微信登录'}
-              </Text>
-            </Button>
-          </View>
-        )}
-      </View>
-
-      {/* 底部协议 */}
-      <View style={{ position: 'fixed', bottom: '40px', left: 0, right: 0, padding: '0 24px' }}>
-        <Text style={{ fontSize: '12px', color: '#9ca3af', textAlign: 'center', display: 'block' }}>
+      {/* 底部登录方式 */}
+      <View className="px-6 pb-12">
+        <View className="space-y-3">
+          <Button
+            onClick={() => openLogin('account')}
+            className="w-full bg-blue-500 text-white h-12 rounded-full"
+          >
+            <Text className="text-base font-medium">账号登录</Text>
+          </Button>
+          
+          <Button
+            onClick={() => openLogin('wechat')}
+            className="w-full bg-green-500 text-white h-12 rounded-full"
+          >
+            <Text className="text-base font-medium">微信登录</Text>
+          </Button>
+        </View>
+        
+        <Text className="block text-center text-xs text-gray-400 mt-6">
           登录即表示同意《用户协议》和《隐私政策》
         </Text>
       </View>
+
+      {/* 登录弹窗 - 简化版 */}
+      {showLogin && (
+        <View className="absolute inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <View className="bg-white rounded-xl w-full max-w-sm p-6">
+            <View className="flex justify-between items-center mb-6">
+              <Text className="text-xl font-bold text-gray-800">
+                {loginType === 'account' ? '账号登录' : '微信登录'}
+              </Text>
+              <View 
+                className="w-8 h-8 flex items-center justify-center"
+                onClick={closeLogin}
+              >
+                <Text className="text-gray-400 text-xl">✕</Text>
+              </View>
+            </View>
+
+            {!needVerify ? (
+              loginType === 'account' ? (
+                <View className="space-y-4">
+                  <View className="bg-gray-50 rounded-xl px-4 py-3">
+                    <Input
+                      className="w-full"
+                      placeholder="请输入账号"
+                      value={username}
+                      onInput={(e: any) => setUsername(e.target.value)}
+                    />
+                  </View>
+                  <View className="bg-gray-50 rounded-xl px-4 py-3">
+                    <Input
+                      className="w-full"
+                      placeholder="请输入密码"
+                      value={password}
+                      onInput={(e: any) => setPassword(e.target.value)}
+                    />
+                  </View>
+                  {error && (
+                    <Text className="text-red-500 text-sm text-center">{error}</Text>
+                  )}
+                  <Button
+                    onClick={handleAccountLogin}
+                    className="w-full bg-blue-500 text-white h-12 rounded-full mt-2"
+                  >
+                    <Text className="text-base font-medium">
+                      {loading ? '登录中...' : '登录'}
+                    </Text>
+                  </Button>
+                </View>
+              ) : (
+                <View className="text-center py-4">
+                  <Text className="block text-gray-600 mb-4">
+                    即将唤起微信授权
+                  </Text>
+                  {error && (
+                    <Text className="text-red-500 text-sm text-center mb-4">{error}</Text>
+                  )}
+                  <Button
+                    onClick={handleWechatLogin}
+                    className="w-full bg-green-500 text-white h-12 rounded-full"
+                  >
+                    <Text className="text-base font-medium">
+                      {loading ? '登录中...' : '确认登录'}
+                    </Text>
+                  </Button>
+                </View>
+              )
+            ) : (
+              <View className="space-y-4">
+                <Text className="block text-center text-sm text-gray-500">
+                  请输入验证码完成验证（演示验证码：123456）
+                </Text>
+                <View className="bg-gray-50 rounded-xl px-4 py-3">
+                  <Input
+                    className="w-full text-center text-lg"
+                    placeholder="请输入验证码"
+                    value={verifyCode}
+                    onInput={(e: any) => setVerifyCode(e.target.value)}
+                    maxlength={6}
+                  />
+                </View>
+                {error && (
+                  <Text className="text-red-500 text-sm text-center">{error}</Text>
+                )}
+                <Button
+                  onClick={handleVerify}
+                  className="w-full bg-blue-500 text-white h-12 rounded-full mt-2"
+                >
+                  <Text className="text-base font-medium">
+                    {loading ? '验证中...' : '验证'}
+                  </Text>
+                </Button>
+              </View>
+            )}
+          </View>
+        </View>
+      )}
     </View>
   )
 }
