@@ -102,7 +102,7 @@ export default function KnowledgeCardInput() {
                 style={{ minHeight: '320px' }}
                 placeholder="请输入要生成知识卡片的内容..."
                 value={content}
-                onInput={(e: any) => handleInput(e.target.value)}
+                onInput={(e: any) => handleInput(e.detail?.value || e.target?.value || '')}
                 maxlength={-1}
               />
             )}

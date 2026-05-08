@@ -249,7 +249,7 @@ export default function LoginPage() {
                         className="w-full"
                         placeholder="请输入账号"
                         value={username}
-                        onInput={(e: any) => setUsername(e.target.value)}
+                        onInput={(e: any) => setUsername(e.detail?.value || e.target?.value || '')}
                       />
                     </View>
                     <View className="bg-gray-50 rounded-xl px-4 py-3">
@@ -258,7 +258,7 @@ export default function LoginPage() {
                         placeholder="请输入密码"
                         password
                         value={password}
-                        onInput={(e: any) => setPassword(e.target.value)}
+                        onInput={(e: any) => setPassword(e.detail?.value || e.target?.value || '')}
                       />
                     </View>
                     {error && (
@@ -304,7 +304,7 @@ export default function LoginPage() {
                     className="w-full text-center text-lg"
                     placeholder="请输入验证码"
                     value={verifyCode}
-                    onInput={(e: any) => setVerifyCode(e.target.value)}
+                    onInput={(e: any) => setVerifyCode(e.detail?.value || e.target?.value || '')}
                     maxlength={6}
                   />
                 </View>
