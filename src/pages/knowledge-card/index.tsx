@@ -3,6 +3,7 @@ import { ArrowLeft } from 'lucide-react-taro'
 import Taro from '@tarojs/taro'
 import { useState } from 'react'
 import { Textarea } from '@/components/ui/textarea'
+import { Network } from '@/network'
 import './index.config'
 
 export default function KnowledgeCardInput() {
@@ -23,7 +24,7 @@ export default function KnowledgeCardInput() {
 
     setLoading(true)
     try {
-      const res: any = await Taro.request({
+      const res: any = await Network.request({
         url: '/api/knowledge-card/generate',
         method: 'POST',
         header: { 'Content-Type': 'application/json' },
