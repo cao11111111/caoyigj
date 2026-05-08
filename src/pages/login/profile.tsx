@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { View, Text, Input } from '@tarojs/components'
+import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { User } from 'lucide-react-taro'
 import { Network } from '@/network'
 

@@ -8,7 +8,7 @@ import './result.css'
 
 export default function KnowledgeCardResult() {
   const [imageUrl, setImageUrl] = useState('')
-  const [title, setTitle] = useState('')
+  const [, setTitle] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
