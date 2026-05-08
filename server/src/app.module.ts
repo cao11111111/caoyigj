@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
-import { AuthController } from './auth.controller';
+import { AuthController, UserController } from './auth.controller';
 import { KnowledgeCardController } from './knowledge-card.controller';
 import { ConversationController } from './conversation/conversation.controller';
 
 @Module({
-  controllers: [AuthController, KnowledgeCardController, ConversationController],
+  controllers: [AuthController, UserController, KnowledgeCardController, ConversationController],
 })
 export class AppModule {}

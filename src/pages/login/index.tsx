@@ -194,8 +194,9 @@ export default function Login() {
         Taro.setStorageSync('token', res.data.data.token)
         Taro.setStorageSync('userInfo', res.data.data.user)
         Taro.showToast({ title: '验证成功', icon: 'success' })
+        // 跳转到信息填写页面
         setTimeout(() => {
-          Taro.switchTab({ url: '/pages/index/index' })
+          Taro.redirectTo({ url: '/pages/login/profile' })
         }, 1000)
       } else {
         Taro.showToast({ title: res.data.msg || '验证失败', icon: 'none' })
@@ -206,8 +207,9 @@ export default function Login() {
       Taro.setStorageSync('token', 'mock-token')
       Taro.setStorageSync('userInfo', { username: '新用户' })
       Taro.showToast({ title: '验证成功(演示)', icon: 'success' })
+      // 跳转到信息填写页面
       setTimeout(() => {
-        Taro.switchTab({ url: '/pages/index/index' })
+        Taro.redirectTo({ url: '/pages/login/profile' })
       }, 1000)
     } finally {
       setLoading(false)

@@ -15,8 +15,15 @@ interface VerifyDto {
   verifyCode: string;
 }
 
+interface ProfileDto {
+  nickname: string;
+  school: string;
+  subject: string;
+}
+
 // 模拟数据库
 const tempTokens = new Map<string, { openid?: string; username?: string; createdAt: number }>();
+const users = new Map<string, any>();
 const VALID_VERIFY_CODE = '123456';
 
 @ApiTags('认证')
@@ -178,15 +185,28 @@ export class AuthController {
     // 验证成功，删除临时令牌
     tempTokens.delete(body.tempToken);
     
+    // 生成新的正式 token
+    const newToken = `token_${Date.now()}_verified`;
+    
+    // 保存用户信息
+    users.set(newToken, {
+      id: 1,
+      username: tempData.username || tempData.openid || '新用户',
+      nickname: '',
+      school: '',
+      subject: '',
+      avatar: '',
+    });
+    
     return {
       code: 200,
       msg: '验证成功',
       data: {
-        token: `token_${Date.now()}_verified`,
+        token: newToken,
         user: {
           id: 1,
           username: tempData.username || tempData.openid || '新用户',
-          nickname: '新用户',
+          nickname: '',
           avatar: '',
         },
       },
@@ -200,6 +220,47 @@ export class AuthController {
       code: 200,
       msg: '登出成功',
       data: null,
+    };
+  }
+}
+
+// 用户信息控制器
+@ApiTags('用户')
+@Controller('user')
+export class UserController {
+  @Post('profile')
+  @ApiOperation({ summary: '保存用户信息' })
+  saveProfile(@Body() body: ProfileDto) {
+    console.log('保存用户信息:', body);
+    
+    return {
+      code: 200,
+      msg: '保存成功',
+      data: {
+        nickname: body.nickname,
+        school: body.school,
+        subject: body.subject,
+      },
+    };
+  }
+
+  @Get('info')
+  @ApiOperation({ summary: '获取用户信息' })
+  getUserInfo() {
+    return {
+      code: 200,
+      msg: 'success',
+      data: {
+        id: 1,
+        username: '111',
+        nickname: '用户111',
+        school: 'XX学校',
+        subject: '教师',
+        avatar: '',
+        name: '用户111',
+        totalCards: 12,
+        totalChats: 8
+      },
     };
   }
 }
