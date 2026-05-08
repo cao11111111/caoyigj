@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { View, Text } from '@tarojs/components'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Dialog } from '@/components/ui/dialog'
 import Taro from '@tarojs/taro'
 import { Network } from '@/network'
 
@@ -57,12 +56,10 @@ export default function LoginPage() {
     try {
       let code = ''
       
-      // 微信小程序环境
       if (Taro.getEnv() === Taro.ENV_TYPE.WEAPP) {
         const loginRes = await Taro.login()
         code = loginRes.code || ''
       } else {
-        // H5 降级：使用模拟 code
         code = 'h5_mock_code_' + Date.now()
       }
 
@@ -127,10 +124,17 @@ export default function LoginPage() {
     setError('')
     setVerifyCode('')
     setNeedVerify(false)
+    setUsername('')
+    setPassword('')
+  }
+
+  const closeLogin = () => {
+    setShowLogin(false)
+    setError('')
   }
 
   return (
-    <View className="min-h-screen bg-white flex flex-col">
+    <View className="min-h-screen bg-white flex flex-col relative">
       {/* 主内容区 */}
       <View className="flex-1 flex flex-col items-center justify-center px-8">
         {/* Logo */}
@@ -165,24 +169,17 @@ export default function LoginPage() {
         </Text>
       </View>
 
-      {/* 登录弹窗 */}
-      <Dialog open={showLogin} onOpenChange={(open) => setShowLogin(open)}>
-        <View className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* 遮罩 */}
-          <View 
-            className="absolute inset-0 bg-black bg-opacity-50" 
-            onClick={() => setShowLogin(false)}
-          />
-          
-          {/* 弹窗内容 */}
-          <View className="relative bg-white rounded-2xl w-full max-w-sm p-6">
+      {/* 登录弹窗 - 简化版 */}
+      {showLogin && (
+        <View className="absolute inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <View className="bg-white rounded-xl w-full max-w-sm p-6">
             <View className="flex justify-between items-center mb-6">
               <Text className="text-xl font-bold text-gray-800">
                 {loginType === 'account' ? '账号登录' : '微信登录'}
               </Text>
               <View 
                 className="w-8 h-8 flex items-center justify-center"
-                onClick={() => setShowLogin(false)}
+                onClick={closeLogin}
               >
                 <Text className="text-gray-400 text-xl">✕</Text>
               </View>
@@ -207,6 +204,9 @@ export default function LoginPage() {
                       onInput={(e: any) => setPassword(e.target.value)}
                     />
                   </View>
+                  {error && (
+                    <Text className="text-red-500 text-sm text-center">{error}</Text>
+                  )}
                   <Button
                     onClick={handleAccountLogin}
                     className="w-full bg-blue-500 text-white h-12 rounded-full mt-2"
@@ -221,6 +221,9 @@ export default function LoginPage() {
                   <Text className="block text-gray-600 mb-4">
                     即将唤起微信授权
                   </Text>
+                  {error && (
+                    <Text className="text-red-500 text-sm text-center mb-4">{error}</Text>
+                  )}
                   <Button
                     onClick={handleWechatLogin}
                     className="w-full bg-green-500 text-white h-12 rounded-full"
@@ -245,25 +248,22 @@ export default function LoginPage() {
                     maxlength={6}
                   />
                 </View>
+                {error && (
+                  <Text className="text-red-500 text-sm text-center">{error}</Text>
+                )}
                 <Button
                   onClick={handleVerify}
                   className="w-full bg-blue-500 text-white h-12 rounded-full mt-2"
                 >
                   <Text className="text-base font-medium">
-                    {loading ? '验证中...' : '确认'}
+                    {loading ? '验证中...' : '验证'}
                   </Text>
                 </Button>
               </View>
             )}
-
-            {error && (
-              <Text className="block text-red-500 text-sm text-center mt-4">
-                {error}
-              </Text>
-            )}
           </View>
         </View>
-      </Dialog>
+      )}
     </View>
   )
 }
