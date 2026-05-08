@@ -39,7 +39,26 @@ export default function History() {
         method: 'GET'
       })
       if (res.data?.code === 200) {
-        setGroupedChats(res.data.data || [])
+        // 后端返回 { list, total, page, pageSize }，转换为分组格式
+        const list = res.data.data?.list || []
+        // 按日期分组
+        const groups: Record<string, ChatItem[]> = {}
+        list.forEach((item: ChatItem) => {
+          const date = new Date(item.time).toLocaleDateString('zh-CN', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          })
+          if (!groups[date]) {
+            groups[date] = []
+          }
+          groups[date].push(item)
+        })
+        const grouped: GroupedChats[] = Object.entries(groups).map(([title, data]) => ({
+          title,
+          data
+        }))
+        setGroupedChats(grouped)
       }
     } catch (e) {
       console.error('获取历史记录失败', e)

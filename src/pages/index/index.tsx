@@ -104,7 +104,7 @@ export default function Index() {
           </Text>
           <View 
             className="bg-blue-500 rounded-xl py-3 text-center"
-            onClick={() => setShowLogin(true)}
+            onClick={() => Taro.navigateTo({ url: '/pages/login/index' })}
           >
             <Text className="text-white font-medium">立即登录</Text>
           </View>
