@@ -159,28 +159,6 @@ export default function LoginPage() {
 
       {/* 底部登录方式 */}
       <View className="px-6 pb-12">
-        {/* 隐私政策勾选框 - 首页必须勾选 */}
-        <View 
-          className="flex flex-row items-start mb-4 p-3 bg-gray-50 rounded-lg"
-          onClick={() => setAgreePrivacy(!agreePrivacy)}
-        >
-          <View 
-            className="w-5 h-5 border-2 border-gray-300 rounded flex items-center justify-center mr-2 mt-0.5"
-          >
-            {agreePrivacy && (
-              <Text className="text-blue-500 text-sm">✓</Text>
-            )}
-          </View>
-          <View className="flex-1">
-            <Text className="text-xs text-gray-500 leading-5">
-              我已阅读并同意
-              <Text className="text-blue-500">《用户服务协议》</Text>
-              和
-              <Text className="text-blue-500">《隐私政策》</Text>
-            </Text>
-          </View>
-        </View>
-        
         <View className="space-y-3">
           <Button
             onClick={() => openLogin('account')}
@@ -199,11 +177,35 @@ export default function LoginPage() {
           </Button>
         </View>
         
-        {!agreePrivacy && (
-          <Text className="block text-center text-xs text-gray-400 mt-4">
-            请先勾选同意用户协议和隐私政策
-          </Text>
-        )}
+        {/* 隐私政策勾选框 - 移到按钮下方 */}
+        <View className="mt-4">
+          <View 
+            className="flex flex-row items-start p-3 bg-gray-50 rounded-lg"
+            onClick={() => setAgreePrivacy(!agreePrivacy)}
+          >
+            <View 
+              className="w-5 h-5 border-2 border-gray-300 rounded flex items-center justify-center mr-2 mt-0.5"
+            >
+              {agreePrivacy && (
+                <Text className="text-blue-500 text-sm">✓</Text>
+              )}
+            </View>
+            <View className="flex-1">
+              <Text className="text-xs text-gray-500 leading-5">
+                我已阅读并同意
+              </Text>
+              <View className="flex flex-row mt-1">
+                <View onClick={(e) => { e.stopPropagation(); Taro.navigateTo({ url: '/pages/login/agreement?type=service' }) }}>
+                  <Text className="text-xs text-blue-500">《用户服务协议》</Text>
+                </View>
+                <Text className="text-xs text-gray-500 mx-1">和</Text>
+                <View onClick={(e) => { e.stopPropagation(); Taro.navigateTo({ url: '/pages/login/agreement?type=privacy' }) }}>
+                  <Text className="text-xs text-blue-500">《隐私政策》</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
       </View>
 
       {/* 登录弹窗 - 简化版 */}
