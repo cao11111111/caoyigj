@@ -225,7 +225,7 @@ export default function LoginPage() {
                 {/* 隐私政策勾选 */}
                 <View className="flex flex-row items-start mb-4">
                   <View 
-                    className="w-5 h-5 border-2 border-gray-300 rounded flex items-center justify-center mr-2 mt-0.5"
+                    className="w-5 h-5 border-2 border-gray-300 rounded flex items-center justify-center mr-2 mt-1"
                     onClick={() => setAgreePrivacy(!agreePrivacy)}
                   >
                     {agreePrivacy && (

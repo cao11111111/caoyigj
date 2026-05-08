@@ -1,5 +1,5 @@
 import { View, Text, ScrollView } from '@tarojs/components'
-import Taro, { useRouter } from '@tarojs/taro'
+import { useRouter } from '@tarojs/taro'
 
 const serviceAgreement = `
 用户服务协议
