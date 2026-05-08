@@ -43,7 +43,13 @@ export default function LoginPage() {
         } else {
           Taro.setStorageSync('token', res.data.data.token)
           Taro.setStorageSync('userInfo', res.data.data.userInfo)
-          Taro.switchTab({ url: '/pages/index/index' })
+          // 检查是否需要填写个人信息
+          const userInfo = res.data.data.userInfo
+          if (!userInfo?.nickname) {
+            Taro.navigateTo({ url: '/pages/login/profile' })
+          } else {
+            Taro.switchTab({ url: '/pages/index/index' })
+          }
         }
       } else {
         setError(res.data.msg || '登录失败')
@@ -86,7 +92,13 @@ export default function LoginPage() {
         } else {
           Taro.setStorageSync('token', res.data.data.token)
           Taro.setStorageSync('userInfo', res.data.data.userInfo)
-          Taro.switchTab({ url: '/pages/index/index' })
+          // 检查是否需要填写个人信息
+          const userInfo = res.data.data.userInfo
+          if (!userInfo?.nickname) {
+            Taro.navigateTo({ url: '/pages/login/profile' })
+          } else {
+            Taro.switchTab({ url: '/pages/index/index' })
+          }
         }
       } else {
         setError(res.data.msg || '登录失败')
@@ -116,7 +128,13 @@ export default function LoginPage() {
       if (res.data.code === 200) {
         Taro.setStorageSync('token', res.data.data.token)
         Taro.setStorageSync('userInfo', res.data.data.userInfo)
-        Taro.switchTab({ url: '/pages/index/index' })
+        // 检查是否需要填写个人信息
+        const userInfo = res.data.data.userInfo
+        if (!userInfo?.nickname) {
+          Taro.navigateTo({ url: '/pages/login/profile' })
+        } else {
+          Taro.switchTab({ url: '/pages/index/index' })
+        }
       } else {
         setError(res.data.msg || '验证失败')
       }
