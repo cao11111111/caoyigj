@@ -27,8 +27,25 @@ export class AuthController {
   login(@Body() body: LoginDto) {
     console.log('登录请求:', body);
     
+    // 固定测试账号：111 / 123456
+    if (body.username === '111' && body.password === '123456') {
+      return {
+        code: 200,
+        msg: '登录成功',
+        data: {
+          needVerify: false,
+          token: `token_${Date.now()}`,
+          user: {
+            id: 1,
+            username: '111',
+            nickname: '用户111',
+            avatar: '',
+          },
+        },
+      };
+    }
+    
     // 演示模式：任意账号密码都能登录
-    // 模拟新用户判断（演示：用户名包含 new 的为新用户）
     const isNewUser = body.username.includes('new') || body.username.includes('test');
     
     if (isNewUser) {
