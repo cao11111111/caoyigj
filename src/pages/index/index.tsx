@@ -1,8 +1,9 @@
 import { View, Text } from '@tarojs/components'
 import { useState, useEffect } from 'react'
 import Taro from '@tarojs/taro'
-import { BookOpen, Construction, ChevronRight, Image as ImageIcon, Sparkles, Clock } from 'lucide-react-taro'
+import { BookOpen, Construction, Sparkles, Clock } from 'lucide-react-taro'
 import { Network } from '@/network'
+import LoginModal from '@/components/login-modal'
 import './index.config'
 
 interface RecentChat {
@@ -24,16 +25,20 @@ interface UserInfo {
 export default function Index() {
   const [userInfo, setUserInfo] = useState<UserInfo>({ name: '用户', avatar: '', totalCards: 0, totalChats: 0 })
   const [recentChats, setRecentChats] = useState<RecentChat[]>([])
-  const [loading, setLoading] = useState(true)
+  const [showLogin, setShowLogin] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
 
   useEffect(() => {
-    const token = Taro.getStorageSync('token')
-    if (!token) {
-      Taro.reLaunch({ url: '/pages/login/index' })
-      return
-    }
-    fetchData()
+    checkLoginStatus()
   }, [])
+
+  const checkLoginStatus = () => {
+    const token = Taro.getStorageSync('token')
+    if (token) {
+      setIsLoggedIn(true)
+      fetchData()
+    }
+  }
 
   const fetchData = async () => {
     try {
@@ -54,17 +59,19 @@ export default function Index() {
       }
     } catch (e) {
       console.error('获取数据失败', e)
-    } finally {
-      setLoading(false)
     }
   }
 
   const quickActions = [
-    { icon: BookOpen, title: '知识卡片', desc: '生成教学卡片', color: 'bg-gradient-to-br from-blue-500 to-blue-600', available: true, type: 'knowledge' },
-    { icon: Construction, title: '待开发', desc: '功能开发中', color: 'bg-gradient-to-br from-slate-400 to-slate-500', available: false, type: 'pending' },
+    { icon: BookOpen, title: '知识卡片', desc: '生成教学卡片', color: 'bg-blue-500', available: true, type: 'knowledge' },
+    { icon: Construction, title: '待开发', desc: '功能开发中', color: 'bg-slate-400', available: false, type: 'pending' },
   ]
 
   const handleQuickAction = (action: typeof quickActions[0]) => {
+    if (!isLoggedIn) {
+      setShowLogin(true)
+      return
+    }
     if (action.available) {
       Taro.navigateTo({ url: '/pages/knowledge-card/index' })
     } else {
@@ -77,46 +84,87 @@ export default function Index() {
       Taro.navigateTo({
         url: `/pages/knowledge-card/result?imageUrl=${encodeURIComponent(chat.imageUrl)}`
       })
-    } else {
-      Taro.navigateTo({ url: '/pages/chat/index' })
     }
   }
 
+  // 未登录状态
+  if (!isLoggedIn) {
+    return (
+      <View className="min-h-screen bg-slate-50 pb-20">
+        {/* 顶部区域 */}
+        <View className="bg-blue-500 px-5 pt-12 pb-16">
+          <Text className="block text-white text-2xl font-bold">曹一工具箱</Text>
+        </View>
+
+        {/* 登录卡片 */}
+        <View className="px-4 -mt-10">
+          <View className="bg-white rounded-2xl p-6 shadow-lg">
+            <Text className="block text-slate-800 text-lg font-bold mb-4">欢迎使用</Text>
+            <Text className="block text-slate-500 text-sm mb-6">
+              点击下方按钮登录，开启智能工具之旅
+            </Text>
+            <View 
+              className="bg-blue-500 rounded-xl py-3 text-center"
+              onClick={() => setShowLogin(true)}
+            >
+              <Text className="text-white font-medium">立即登录</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* 功能介绍 */}
+        <View className="px-4 mt-6">
+          <View className="bg-white rounded-2xl p-5 shadow-md">
+            <Text className="block text-slate-800 font-semibold mb-4">功能介绍</Text>
+            <View className="space-y-4">
+              <View className="flex items-start">
+                <View className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center mr-3">
+                  <BookOpen size={20} color="#2563EB" />
+                </View>
+                <View className="flex-1">
+                  <Text className="block text-slate-700 font-medium">知识卡片</Text>
+                  <Text className="block text-slate-400 text-sm mt-1">输入内容生成手绘风格教学卡片</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* 登录弹窗 */}
+        <LoginModal show={showLogin} onClose={() => setShowLogin(false)} />
+      </View>
+    )
+  }
+
+  // 已登录状态
   return (
     <View className="min-h-screen bg-slate-50 pb-20">
       {/* 顶部欢迎区域 */}
-      <View className="bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 px-5 pt-12 pb-8 relative overflow-hidden">
-        {/* 装饰 */}
-        <View className="absolute top-16 right-8 w-40 h-40 bg-white opacity-5 rounded-full" />
-        <View className="absolute bottom-2 left-2 w-24 h-24 bg-white opacity-5 rounded-full" />
-        
-        <View className="relative z-10">
-          <View className="flex items-center mb-3">
-            <View className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-lg mr-4">
-              <Text className="text-2xl">👋</Text>
-            </View>
-            <View>
-              <Text className="block text-white text-xl font-bold">{userInfo.name}</Text>
-              <Text className="block text-blue-100 text-sm mt-1">欢迎使用曹一工具箱</Text>
-            </View>
+      <View className="bg-blue-500 px-5 pt-12 pb-8">
+        <View className="flex items-center">
+          <View className="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-3">
+            <Text className="text-xl">👋</Text>
           </View>
-          
-          {/* 统计卡片 */}
-          <View className="flex gap-3 mt-5">
-            <View className="flex-1 bg-white bg-opacity-20 rounded-xl p-3">
-              <View className="flex items-center">
-                <BookOpen size={16} color="#ffffff" />
-                <Text className="text-white text-xs ml-2">卡片总数</Text>
-              </View>
-              <Text className="block text-white text-2xl font-bold mt-1">{userInfo.totalCards}</Text>
+          <View>
+            <Text className="block text-white text-lg font-bold">{userInfo.name}</Text>
+          </View>
+        </View>
+        
+        {/* 统计卡片 */}
+        <View className="flex gap-3 mt-5">
+          <View className="flex-1 bg-white bg-opacity-20 rounded-xl p-3">
+            <View className="flex items-center">
+              <BookOpen size={14} color="#ffffff" />
+              <Text className="text-white text-xs ml-2">卡片总数</Text>
             </View>
-            <View className="flex-1 bg-white bg-opacity-20 rounded-xl p-3">
-              <View className="flex items-center">
-                <Clock size={16} color="#ffffff" />
-                <Text className="text-white text-xs ml-2">对话次数</Text>
-              </View>
-              <Text className="block text-white text-2xl font-bold mt-1">{userInfo.totalChats}</Text>
+            <Text className="block text-white text-xl font-bold mt-1">{userInfo.totalCards}</Text>
+          </View>
+          <View className="flex-1 bg-white bg-opacity-20 rounded-xl p-3">
+            <View className="flex items-center">
+              <Clock size={14} color="#ffffff" />
+              <Text className="text-white text-xs ml-2">对话次数</Text>
             </View>
+            <Text className="block text-white text-xl font-bold mt-1">{userInfo.totalChats}</Text>
           </View>
         </View>
       </View>
@@ -124,27 +172,25 @@ export default function Index() {
       {/* 快捷入口 */}
       <View className="px-4 -mt-4">
         <View className="bg-white rounded-2xl p-4 shadow-md">
-          <View className="flex items-center justify-between mb-4">
-            <View className="flex items-center">
-              <Sparkles size={18} color="#2563EB" />
-              <Text className="block text-slate-800 text-base font-semibold ml-2">快捷入口</Text>
-            </View>
+          <View className="flex items-center mb-4">
+            <Sparkles size={18} color="#2563EB" />
+            <Text className="block text-slate-800 font-semibold ml-2">快捷入口</Text>
           </View>
           
-          <View className="grid grid-cols-4 gap-4">
+          <View className="flex gap-4">
             {quickActions.map((item, index) => (
               <View
                 key={index}
-                className="flex flex-col items-center"
+                className="flex-1"
                 onClick={() => handleQuickAction(item)}
               >
-                <View className={`w-14 h-14 ${item.color} rounded-2xl flex items-center justify-center mb-2 shadow-md`}>
+                <View className={`w-full h-20 ${item.color} rounded-xl flex flex-col items-center justify-center mb-2`}>
                   <item.icon size={24} color="#ffffff" />
                 </View>
-                <Text className={`block text-sm font-medium ${item.available ? 'text-slate-700' : 'text-slate-400'}`}>
+                <Text className={`block text-center text-sm font-medium ${item.available ? 'text-slate-700' : 'text-slate-400'}`}>
                   {item.title}
                 </Text>
-                <Text className="block text-slate-400 text-xs mt-1">{item.desc}</Text>
+                <Text className="block text-slate-400 text-xs text-center mt-1">{item.desc}</Text>
               </View>
             ))}
           </View>
@@ -152,63 +198,30 @@ export default function Index() {
       </View>
 
       {/* 最近对话 */}
-      <View className="px-4 mt-5">
-        <View className="flex items-center justify-between mb-4">
-          <View className="flex items-center">
-            <Clock size={18} color="#475569" />
-            <Text className="block text-slate-800 text-base font-semibold ml-2">最近对话</Text>
-          </View>
-          <View
-            className="flex items-center"
-            onClick={() => Taro.switchTab({ url: '/pages/history/index' })}
-          >
-            <Text className="block text-slate-500 text-sm">查看全部</Text>
-            <ChevronRight size={16} color="#94a3b8" />
-          </View>
-        </View>
-
-        <View className="bg-white rounded-2xl overflow-hidden shadow-sm">
-          {loading ? (
-            <View className="p-8 text-center">
-              <Text className="block text-slate-400 text-sm">加载中...</Text>
-            </View>
-          ) : recentChats.length === 0 ? (
-            <View className="p-8 text-center">
-              <View className="w-16 h-16 mx-auto mb-3 bg-slate-100 rounded-full flex items-center justify-center">
-                <BookOpen size={28} color="#CBD5E1" />
-              </View>
-              <Text className="block text-slate-400 text-sm">暂无对话记录</Text>
-              <Text className="block text-slate-300 text-xs mt-1">点击快捷入口开始使用</Text>
-            </View>
-          ) : (
-            recentChats.map((item, index) => (
-              <View
-                key={item.id}
-                className={`p-4 flex items-center ${index !== recentChats.length - 1 ? 'border-b border-slate-100' : ''}`}
-                onClick={() => handleChatClick(item)}
-              >
-                <View className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center mr-3">
-                  {item.type === 'knowledge' && item.imageUrl ? (
-                    <ImageIcon size={20} color="#2563EB" />
-                  ) : (
-                    <BookOpen size={20} color="#2563EB" />
-                  )}
-                </View>
-                <View className="flex-1 min-w-0">
-                  <Text className="block text-slate-800 text-sm font-medium truncate">{item.title}</Text>
-                  <Text className="block text-slate-400 text-xs mt-1 truncate">{item.preview}</Text>
-                </View>
-                <View className="flex flex-col items-end ml-2">
-                  <Text className="text-slate-400 text-xs">{item.time}</Text>
-                  <View className="bg-blue-50 px-2 py-1 rounded mt-1">
-                    <Text className="text-blue-500 text-xs">知识卡片</Text>
+      {recentChats.length > 0 && (
+        <View className="px-4 mt-5">
+          <View className="bg-white rounded-2xl p-4 shadow-md">
+            <Text className="block text-slate-800 font-semibold mb-3">最近对话</Text>
+            <View className="space-y-3">
+              {recentChats.slice(0, 3).map((chat) => (
+                <View
+                  key={chat.id}
+                  className="flex items-center p-3 bg-slate-50 rounded-xl"
+                  onClick={() => handleChatClick(chat)}
+                >
+                  <View className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                    <BookOpen size={18} color="#2563EB" />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="block text-slate-700 text-sm font-medium">{chat.title}</Text>
+                    <Text className="block text-slate-400 text-xs mt-1">{chat.time}</Text>
                   </View>
                 </View>
-              </View>
-            ))
-          )}
+              ))}
+            </View>
+          </View>
         </View>
-      </View>
+      )}
     </View>
   )
 }

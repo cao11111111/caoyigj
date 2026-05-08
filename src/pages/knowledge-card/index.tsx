@@ -49,7 +49,7 @@ export default function KnowledgeCardInput() {
   return (
     <View className="min-h-screen bg-slate-50 flex flex-col">
       {/* Header */}
-      <View className="bg-gradient-to-r from-blue-500 to-blue-600 px-4 pt-12 pb-5 flex-shrink-0 shadow-md">
+      <View className="bg-blue-500 px-4 pt-12 pb-5 flex-shrink-0 shadow-md">
         <View className="flex items-center">
           <ArrowLeft 
             className="p-2 mr-2"

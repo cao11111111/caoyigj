@@ -67,41 +67,34 @@ export default function Profile() {
   return (
     <View className="min-h-screen bg-slate-50 pb-20">
       {/* 顶部区域 */}
-      <View className="bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 px-5 pt-12 pb-8 relative overflow-hidden">
-        {/* 装饰 */}
-        <View className="absolute top-16 right-8 w-40 h-40 bg-white opacity-5 rounded-full" />
-        <View className="absolute bottom-4 left-4 w-24 h-24 bg-white opacity-5 rounded-full" />
+      <View className="bg-blue-500 px-5 pt-12 pb-8">
+        <Text className="block text-white text-xl font-bold mb-5">我的</Text>
         
-        <View className="relative z-10">
-          <Text className="block text-white text-xl font-bold mb-5">我的</Text>
-          
-          {/* 用户卡片 */}
-          <View className="bg-white bg-opacity-20 rounded-2xl p-4 flex items-center backdrop-blur-sm">
-            <View className="w-16 h-16 rounded-full bg-white flex items-center justify-center mr-4 shadow-lg">
-              <Text className="text-2xl">👤</Text>
-            </View>
-            <View className="flex-1">
-              <Text className="block text-white text-xl font-bold">{userInfo.name}</Text>
-              <Text className="block text-blue-100 text-sm mt-1">曹一工具箱用户</Text>
-            </View>
+        {/* 用户卡片 */}
+        <View className="bg-white bg-opacity-20 rounded-2xl p-4 flex items-center">
+          <View className="w-14 h-14 rounded-full bg-white flex items-center justify-center mr-3">
+            <Text className="text-xl">👤</Text>
           </View>
-          
-          {/* 统计 */}
-          <View className="flex gap-3 mt-4">
-            <View className="flex-1 bg-white bg-opacity-20 rounded-xl p-3 backdrop-blur-sm">
-              <View className="flex items-center justify-center">
-                <BookOpen size={16} color="#ffffff" />
-                <Text className="text-white text-xs ml-2">知识卡片</Text>
-              </View>
-              <Text className="block text-white text-2xl font-bold mt-1 text-center">{userInfo.totalCards}</Text>
+          <View className="flex-1">
+            <Text className="block text-white text-lg font-bold">{userInfo.name}</Text>
+          </View>
+        </View>
+        
+        {/* 统计 */}
+        <View className="flex gap-3 mt-4">
+          <View className="flex-1 bg-white bg-opacity-20 rounded-xl p-3">
+            <View className="flex items-center justify-center">
+              <BookOpen size={16} color="#ffffff" />
+              <Text className="text-white text-xs ml-2">知识卡片</Text>
             </View>
-            <View className="flex-1 bg-white bg-opacity-20 rounded-xl p-3 backdrop-blur-sm">
-              <View className="flex items-center justify-center">
-                <MessageCircle size={16} color="#ffffff" />
-                <Text className="text-white text-xs ml-2">对话次数</Text>
-              </View>
-              <Text className="block text-white text-2xl font-bold mt-1 text-center">{userInfo.totalChats}</Text>
+            <Text className="block text-white text-xl font-bold mt-1 text-center">{userInfo.totalCards}</Text>
+          </View>
+          <View className="flex-1 bg-white bg-opacity-20 rounded-xl p-3">
+            <View className="flex items-center justify-center">
+              <MessageCircle size={16} color="#ffffff" />
+              <Text className="text-white text-xs ml-2">对话次数</Text>
             </View>
+            <Text className="block text-white text-xl font-bold mt-1 text-center">{userInfo.totalChats}</Text>
           </View>
         </View>
       </View>

@@ -61,15 +61,10 @@ export default function History() {
   return (
     <View className="min-h-screen bg-slate-50 pb-20">
       {/* 顶部区域 */}
-      <View className="bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 px-5 pt-12 pb-6 relative overflow-hidden">
-        <View className="absolute top-14 right-8 w-36 h-36 bg-white opacity-5 rounded-full" />
-        <View className="absolute bottom-2 left-2 w-20 h-20 bg-white opacity-5 rounded-full" />
-        
-        <View className="relative z-10">
-          <View className="flex items-center">
-            <Clock size={24} color="#ffffff" />
-            <Text className="block text-white text-xl font-bold ml-2">对话历史</Text>
-          </View>
+      <View className="bg-blue-500 px-5 pt-12 pb-6">
+        <View className="flex items-center">
+          <Clock size={24} color="#ffffff" />
+          <Text className="block text-white text-xl font-bold ml-2">对话历史</Text>
         </View>
       </View>
 
