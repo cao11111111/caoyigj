@@ -200,6 +200,7 @@ export class AuthController {
           .from('users')
           .insert({
             username: `wechat_${openid}`,
+            password: 'wechat_oauth', // 微信登录用户密码
             token: tempToken,
             nickname: '微信用户',
             quota: 10, // 新用户默认10次额度
@@ -266,6 +267,7 @@ export class AuthController {
         .from('users')
         .insert({
           username: `wechat_${openid}`,
+          password: 'wechat_oauth', // 微信登录用户密码
           token,
           nickname: '微信用户',
           quota: 10, // 新用户默认10次额度
