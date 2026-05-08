@@ -1,38 +1,27 @@
-import { View, Text, Image, Input } from '@tarojs/components'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { View, Text, Input, Button } from '@tarojs/components'
+import { User, Lock, X, Eye, EyeOff } from 'lucide-react-taro'
 import Taro from '@tarojs/taro'
-import { Button } from '@/components/ui/button'
-import { X, User, Lock } from 'lucide-react-taro'
 import { Network } from '@/network'
-import './index.config'
 
 interface LoginModalProps {
   show: boolean
   onClose: () => void
-  onSuccess?: () => void
+  onSuccess: () => void
 }
 
 export default function LoginModal({ show, onClose, onSuccess }: LoginModalProps) {
   const [loginType, setLoginType] = useState<'account' | 'wechat'>('account')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [needVerify, setNeedVerify] = useState(false)
   const [verifyCode, setVerifyCode] = useState('')
-  const [tempToken, setTempToken] = useState('')
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [needVerify, setNeedVerify] = useState(false)
+  const [tempToken, setTempToken] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
 
-  useEffect(() => {
-    if (show) {
-      setUsername('')
-      setPassword('')
-      setVerifyCode('')
-      setTempToken('')
-      setNeedVerify(false)
-      setError('')
-    }
-  }, [show])
-
+  // 账号登录
   const handleAccountLogin = async () => {
     if (!username || !password) {
       setError('请输入账号和密码')
@@ -46,67 +35,75 @@ export default function LoginModal({ show, onClose, onSuccess }: LoginModalProps
         method: 'POST',
         data: { username, password }
       })
-      console.log('登录响应:', res)
+      console.log('登录响应:', res.data)
       
-      if (res.data?.code === 200) {
-        if (res.data.data?.needVerify) {
-          setTempToken(res.data.data.token || '')
+      if (res.data.code === 200) {
+        if (res.data.data.needVerify) {
+          setTempToken(res.data.data.tempToken)
           setNeedVerify(true)
         } else {
-          handleLoginSuccess(res.data.data)
+          Taro.setStorageSync('token', res.data.data.token)
+          Taro.setStorageSync('user', JSON.stringify(res.data.data.user))
+          onSuccess()
         }
       } else {
-        setError(res.data?.msg || '登录失败')
+        setError(res.data.msg || '登录失败')
       }
-    } catch (e: any) {
-      console.error('登录错误:', e)
-      setError(e.message || '网络错误')
+    } catch (err: any) {
+      setError(err.message || '网络错误')
     } finally {
       setLoading(false)
     }
   }
 
+  // 微信登录
   const handleWechatLogin = async () => {
     setLoading(true)
     setError('')
     try {
-      let code = ''
+      let code = 'mock_code_h5_' + Date.now()
       
+      // 小程序端获取真实code
       if (Taro.getEnv() === 'WEAPP') {
-        const loginRes = await Taro.login()
-        code = loginRes.code || ''
-      } else {
-        code = 'h5_demo_' + Date.now()
+        const wechatRes = await new Promise((resolve, reject) => {
+          (wx as any).login({
+            success: (res: any) => resolve(res.code),
+            fail: reject
+          })
+        })
+        code = wechatRes as string
       }
-
+      
       const res: any = await Network.request({
         url: '/api/auth/wechat-login',
         method: 'POST',
         data: { code }
       })
-      console.log('微信登录响应:', res)
-
-      if (res.data?.code === 200) {
-        if (res.data.data?.needVerify) {
-          setTempToken(res.data.data.token || '')
+      console.log('微信登录响应:', res.data)
+      
+      if (res.data.code === 200) {
+        if (res.data.data.needVerify) {
+          setTempToken(res.data.data.tempToken)
           setNeedVerify(true)
         } else {
-          handleLoginSuccess(res.data.data)
+          Taro.setStorageSync('token', res.data.data.token)
+          Taro.setStorageSync('user', JSON.stringify(res.data.data.user))
+          onSuccess()
         }
       } else {
-        setError(res.data?.msg || '登录失败')
+        setError(res.data.msg || '登录失败')
       }
-    } catch (e: any) {
-      console.error('微信登录错误:', e)
-      setError(e.message || '网络错误')
+    } catch (err: any) {
+      setError(err.message || '网络错误')
     } finally {
       setLoading(false)
     }
   }
 
+  // 验证验证码
   const handleVerify = async () => {
-    if (!verifyCode || verifyCode.length !== 6) {
-      setError('请输入6位验证码')
+    if (verifyCode !== '123456') {
+      setError('验证码错误')
       return
     }
     setLoading(true)
@@ -117,30 +114,19 @@ export default function LoginModal({ show, onClose, onSuccess }: LoginModalProps
         method: 'POST',
         data: { tempToken, verifyCode }
       })
-      console.log('验证响应:', res)
-
-      if (res.data?.code === 200) {
-        handleLoginSuccess(res.data.data)
+      console.log('验证响应:', res.data)
+      
+      if (res.data.code === 200) {
+        Taro.setStorageSync('token', res.data.data.token)
+        Taro.setStorageSync('user', JSON.stringify(res.data.data.user))
+        onSuccess()
       } else {
-        setError(res.data?.msg || '验证失败')
+        setError(res.data.msg || '验证失败')
       }
-    } catch (e: any) {
-      console.error('验证错误:', e)
-      setError(e.message || '网络错误')
+    } catch (err: any) {
+      setError(err.message || '网络错误')
     } finally {
       setLoading(false)
-    }
-  }
-
-  const handleLoginSuccess = (data: any) => {
-    Taro.setStorageSync('token', data.token)
-    Taro.setStorageSync('userInfo', data.user)
-    setLoading(false)
-    onClose()
-    if (onSuccess) {
-      onSuccess()
-    } else {
-      Taro.redirectTo({ url: '/pages/login/profile' })
     }
   }
 
@@ -157,67 +143,71 @@ export default function LoginModal({ show, onClose, onSuccess }: LoginModalProps
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      zIndex: 1000,
+      zIndex: 999,
     }}>
       <View style={{
         width: '85%',
-        maxWidth: 400,
+        maxWidth: 360,
         backgroundColor: '#ffffff',
         borderRadius: 16,
         padding: 24,
         position: 'relative',
       }}>
         {/* 关闭按钮 */}
-        <View onClick={onClose} style={{
-          position: 'absolute',
-          top: 12,
-          right: 12,
-          padding: 8,
-        }}>
-          <X size={20} color="#64748b" />
+        <View 
+          onClick={onClose}
+          style={{
+            position: 'absolute',
+            top: 12,
+            right: 12,
+            width: 32,
+            height: 32,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <X size={20} color="#94a3b8" />
         </View>
 
-        {/* 标题 */}
         <Text style={{
           display: 'block',
           textAlign: 'center',
           fontSize: 20,
-          fontWeight: 'bold',
+          fontWeight: '600',
           color: '#1e293b',
-          marginBottom: 8,
+          marginBottom: 20,
         }}>
-          {needVerify ? '验证手机号' : '登录'}
-        </Text>
-        <Text style={{
-          display: 'block',
-          textAlign: 'center',
-          fontSize: 14,
-          color: '#64748b',
-          marginBottom: 24,
-        }}>
-          {needVerify ? '请输入6位验证码' : '登录后体验完整功能'}
+          {needVerify ? '验证身份' : '用户登录'}
         </Text>
 
         {needVerify ? (
-          /* 验证码输入 */
+          /* 验证码验证 */
           <View>
+            <Text style={{
+              display: 'block',
+              textAlign: 'center',
+              fontSize: 14,
+              color: '#64748b',
+              marginBottom: 16,
+            }}>
+              请输入验证码完成验证
+            </Text>
             <View style={{
               backgroundColor: '#f1f5f9',
               borderRadius: 12,
               padding: '12px 16px',
               marginBottom: 16,
+              display: 'flex',
+              alignItems: 'center',
             }}>
               <Input
-                type="number"
                 placeholder="请输入验证码"
-                maxLength={6}
                 value={verifyCode}
                 onInput={(e: any) => setVerifyCode(e.detail.value)}
                 style={{
-                  width: '100%',
-                  fontSize: 16,
-                  textAlign: 'center',
-                  letterSpacing: 8,
+                  flex: 1,
+                  fontSize: 15,
                 }}
               />
             </View>
@@ -228,40 +218,52 @@ export default function LoginModal({ show, onClose, onSuccess }: LoginModalProps
               color: '#94a3b8',
               marginBottom: 16,
             }}>
-              验证码: 123456
+              演示验证码：123456
             </Text>
-            <Button
+            <View 
               onClick={handleVerify}
-              loading={loading}
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+              style={{
+                width: '100%',
+                backgroundColor: '#2563eb',
+                borderRadius: 12,
+                padding: '14px 0',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
             >
-              <Text className="text-white">验证</Text>
-            </Button>
+              <Text style={{
+                color: '#ffffff',
+                fontSize: 16,
+                fontWeight: '500',
+              }}>
+                {loading ? '验证中...' : '确认'}
+              </Text>
+            </View>
           </View>
         ) : (
-          /* 登录表单 */
           <>
-            {/* 切换标签 */}
+            {/* 登录方式切换 */}
             <View style={{
               display: 'flex',
-              backgroundColor: '#f1f5f9',
-              borderRadius: 8,
-              padding: 4,
               marginBottom: 20,
+              backgroundColor: '#f1f5f9',
+              borderRadius: 10,
+              padding: 4,
             }}>
-              <View
+              <View 
                 onClick={() => setLoginType('account')}
                 style={{
                   flex: 1,
-                  padding: '8px 16px',
-                  borderRadius: 6,
+                  padding: '10px 0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   backgroundColor: loginType === 'account' ? '#ffffff' : 'transparent',
-                  boxShadow: loginType === 'account' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                  borderRadius: 8,
                 }}
               >
                 <Text style={{
-                  display: 'block',
-                  textAlign: 'center',
                   fontSize: 14,
                   color: loginType === 'account' ? '#2563eb' : '#64748b',
                   fontWeight: loginType === 'account' ? '600' : '400',
@@ -269,19 +271,19 @@ export default function LoginModal({ show, onClose, onSuccess }: LoginModalProps
                   账号登录
                 </Text>
               </View>
-              <View
+              <View 
                 onClick={() => setLoginType('wechat')}
                 style={{
                   flex: 1,
-                  padding: '8px 16px',
-                  borderRadius: 6,
+                  padding: '10px 0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   backgroundColor: loginType === 'wechat' ? '#ffffff' : 'transparent',
-                  boxShadow: loginType === 'wechat' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                  borderRadius: 8,
                 }}
               >
                 <Text style={{
-                  display: 'block',
-                  textAlign: 'center',
                   fontSize: 14,
                   color: loginType === 'wechat' ? '#2563eb' : '#64748b',
                   fontWeight: loginType === 'wechat' ? '600' : '400',
@@ -324,7 +326,7 @@ export default function LoginModal({ show, onClose, onSuccess }: LoginModalProps
                 }}>
                   <Lock size={18} color="#64748b" />
                   <Input
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     placeholder="请输入密码"
                     value={password}
                     onInput={(e: any) => setPassword(e.detail.value)}
@@ -334,14 +336,39 @@ export default function LoginModal({ show, onClose, onSuccess }: LoginModalProps
                       fontSize: 15,
                     }}
                   />
+                  <View 
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{
+                      padding: 4,
+                    }}
+                  >
+                    {showPassword ? (
+                      <EyeOff size={18} color="#94a3b8" />
+                    ) : (
+                      <Eye size={18} color="#94a3b8" />
+                    )}
+                  </View>
                 </View>
-                <Button
+                <View 
                   onClick={handleAccountLogin}
-                  loading={loading}
-                  className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+                  style={{
+                    width: '100%',
+                    backgroundColor: '#2563eb',
+                    borderRadius: 12,
+                    padding: '14px 0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
                 >
-                  <Text className="text-white">登录</Text>
-                </Button>
+                  <Text style={{
+                    color: '#ffffff',
+                    fontSize: 16,
+                    fontWeight: '500',
+                  }}>
+                    {loading ? '登录中...' : '登录'}
+                  </Text>
+                </View>
               </View>
             ) : (
               /* 微信登录 */
@@ -362,24 +389,36 @@ export default function LoginModal({ show, onClose, onSuccess }: LoginModalProps
                     justifyContent: 'center',
                     marginBottom: 12,
                   }}>
-                    <Text style={{ fontSize: 32 }}>微信</Text>
+                    <Text style={{ fontSize: 28, color: '#ffffff' }}>微</Text>
                   </View>
                   <Text style={{
-                    display: 'block',
-                    textAlign: 'center',
                     fontSize: 14,
                     color: '#64748b',
+                    textAlign: 'center',
                   }}>
                     点击下方按钮使用微信登录
                   </Text>
                 </View>
-                <Button
+                <View 
                   onClick={handleWechatLogin}
-                  loading={loading}
-                  className="w-full bg-green-500 hover:bg-green-600 text-white"
+                  style={{
+                    width: '100%',
+                    backgroundColor: '#07c160',
+                    borderRadius: 12,
+                    padding: '14px 0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
                 >
-                  <Text className="text-white">微信一键登录</Text>
-                </Button>
+                  <Text style={{
+                    color: '#ffffff',
+                    fontSize: 16,
+                    fontWeight: '500',
+                  }}>
+                    {loading ? '登录中...' : '微信一键登录'}
+                  </Text>
+                </View>
               </View>
             )}
           </>
