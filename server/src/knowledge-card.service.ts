@@ -7,35 +7,8 @@ export class KnowledgeCardService {
   private readonly imageApiKey = process.env.IMAGE_API_KEY || 'sk-w0V20fsgKFWm1tiAMUi4Mof7KREdI1AoFDdfOp2GDnOjzplt';
 
   async generate(userContent: string): Promise<string> {
-    // GPT Image 2 提示词结构：
-    // [场景/用途], [主体描述], [具体细节：光线/材质/颜色/文字], [风格参考], [约束条件：比例/背景]
-    const prompt = `Educational knowledge card design for school teachers.
-    
-[Scene] Clean white background knowledge card layout
-
-[Subject] Cartoon-style hand-drawn educational illustration with:
-- "标题" area for main title (Chinese text)
-- "核心概念" area for core concept explanation (Chinese text)  
-- "关键要点" area for 3-4 key points (Chinese text)
-- "记忆口诀" area for fun memory rhyme (Chinese text)
-
-[Details]
-- Vibrant pastel colors, cute round characters
-- Hand-drawn doodle style with soft edges
-- Adorable cartoon icons and decorations
-- Clear text rendering, Chinese characters must be readable and accurate
-- No spelling errors in Chinese text
-
-[Style]
-- Whimsical children's book illustration style
-- Bright and cheerful color palette
-- Clean professional layout with comfortable spacing
-- Paper texture feel, like a beautiful crafted card
-
-[Constraints]
-- Portrait 3:4 ratio
-- High detail, sharp edges
-- No watermark, no extra text outside designated areas`;
+    // GPT Image 2 - 手绘风格知识卡片
+    const prompt = `Hand-drawn style knowledge card`;
 
     console.log('[KnowledgeCard] Generating with user content:', userContent.substring(0, 100));
     
