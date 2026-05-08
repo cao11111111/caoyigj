@@ -8,6 +8,8 @@ interface LoginDto {
 
 interface WechatLoginDto {
   code: string;
+  avatar?: string;
+  nickname?: string;
 }
 
 interface VerifyDto {
@@ -239,9 +241,14 @@ export class AuthController {
       }
       
       if (existingWxUser) {
+        // 更新 token 和头像昵称（如果传入）
+        const updateData: any = { token };
+        if (body.avatar) updateData.avatar = body.avatar;
+        if (body.nickname) updateData.nickname = body.nickname;
+        
         await client
           .from('users')
-          .update({ token })
+          .update(updateData)
           .eq('id', existingWxUser.id);
         
         return {
@@ -269,7 +276,8 @@ export class AuthController {
           username: `wechat_${openid}`,
           password: 'wechat_oauth', // 微信登录用户密码
           token,
-          nickname: '微信用户',
+          nickname: body.nickname || '微信用户',
+          avatar: body.avatar || null,
           quota: 10, // 新用户默认10次额度
         })
         .select()

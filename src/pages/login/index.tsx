@@ -16,6 +16,8 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [agreePrivacy, setAgreePrivacy] = useState(false)
+  const [wechatAvatar, setWechatAvatar] = useState('')
+  const [wechatNickname, setWechatNickname] = useState('')
 
   const handleAccountLogin = async () => {
     if (!agreePrivacy) {
@@ -61,6 +63,14 @@ export default function LoginPage() {
     }
   }
 
+  // 微信头像选择
+  const handleChooseAvatar = (e: any) => {
+    const avatarUrl = e.detail?.avatarUrl || e.target?.dataset?.avatar || ''
+    if (avatarUrl) {
+      setWechatAvatar(avatarUrl)
+    }
+  }
+
   const handleWechatLogin = async () => {
     if (!agreePrivacy) {
       setError('请先阅读并同意《用户服务协议》及《隐私政策》')
@@ -81,7 +91,11 @@ export default function LoginPage() {
       const res = await Network.request({
         url: '/api/auth/wechat-login',
         method: 'POST',
-        data: { code }
+        data: { 
+          code,
+          avatar: wechatAvatar,
+          nickname: wechatNickname || '微信用户'
+        }
       })
       console.log('微信登录响应:', res.data)
       
@@ -293,10 +307,39 @@ export default function LoginPage() {
                     </Button>
                   </View>
                 ) : (
-                  <View className="text-center py-4">
-                    <Text className="block text-gray-600 mb-4">
-                      即将唤起微信授权
+                  <View className="py-4">
+                    <Text className="block text-gray-600 mb-4 text-center">
+                      一键同步微信头像和昵称
                     </Text>
+                    {/* 头像选择 */}
+                    <View className="flex justify-center mb-4">
+                      <View className="relative">
+                        <Button
+                          open-type="chooseAvatar"
+                          onChooseAvatar={handleChooseAvatar}
+                          className="w-20 h-20 rounded-full bg-gray-100 p-0 border-none"
+                        >
+                          {wechatAvatar ? (
+                            <Image src={wechatAvatar} className="w-20 h-20 rounded-full" />
+                          ) : (
+                            <Text className="text-gray-400 text-3xl">+</Text>
+                          )}
+                        </Button>
+                      </View>
+                    </View>
+                    <Text className="block text-xs text-gray-400 text-center mb-3">
+                      点击选择微信头像
+                    </Text>
+                    {/* 昵称输入 */}
+                    <View className="bg-gray-50 rounded-xl px-4 py-3 mb-4">
+                      <Input
+                        type="nickname"
+                        className="w-full text-center"
+                        placeholder="点击输入微信昵称"
+                        value={wechatNickname}
+                        onInput={(e: any) => setWechatNickname(e.detail?.value || e.target?.value || '')}
+                      />
+                    </View>
                     {error && (
                       <Text className="text-red-500 text-sm text-center mb-4">{error}</Text>
                     )}
