@@ -30,6 +30,12 @@ export default function Profile() {
 
 
   useEffect(() => {
+    // 检查登录状态
+    const token = Taro.getStorageSync('token')
+    if (!token) {
+      Taro.reLaunch({ url: '/pages/login/index' })
+      return
+    }
     fetchUserInfo()
   }, [])
 
@@ -47,11 +53,26 @@ export default function Profile() {
     }
   }
 
+  const handleLogout = () => {
+    Taro.showModal({
+      title: '提示',
+      content: '确定要退出登录吗？',
+      success: (res) => {
+        if (res.confirm) {
+          Taro.removeStorageSync('token')
+          Taro.removeStorageSync('userInfo')
+          Taro.reLaunch({ url: '/pages/login/index' })
+        }
+      }
+    })
+  }
+
   const menuItems: MenuItem[] = [
     { icon: FileText, title: '我的知识卡片', desc: `${userInfo.totalCards} 张`, onClick: () => Taro.switchTab({ url: '/pages/history/index' }) },
     { icon: MessageSquare, title: '我的对话', desc: `${userInfo.totalChats} 条`, onClick: () => Taro.switchTab({ url: '/pages/history/index' }) },
     { icon: Settings, title: '设置', showArrow: true },
     { icon: CircleAlert, title: '帮助与反馈', showArrow: true },
+    { icon: LogOut, title: '退出登录', onClick: handleLogout },
   ]
 
   return (

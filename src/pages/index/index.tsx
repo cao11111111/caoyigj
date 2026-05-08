@@ -27,6 +27,12 @@ export default function Index() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // 检查登录状态
+    const token = Taro.getStorageSync('token')
+    if (!token) {
+      Taro.reLaunch({ url: '/pages/login/index' })
+      return
+    }
     fetchData()
   }, [])
 
