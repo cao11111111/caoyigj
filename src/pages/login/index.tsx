@@ -128,6 +128,10 @@ export default function LoginPage() {
   }
 
   const openLogin = (type: 'account' | 'wechat') => {
+    if (!agreePrivacy) {
+      Taro.showToast({ title: '请先阅读并同意用户协议和隐私政策', icon: 'none' })
+      return
+    }
     setLoginType(type)
     setShowLogin(true)
     setError('')
@@ -162,47 +166,39 @@ export default function LoginPage() {
         <View className="space-y-3">
           <Button
             onClick={() => openLogin('account')}
-            className={`w-full h-12 rounded-full ${agreePrivacy ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-500'}`}
-            disabled={!agreePrivacy}
+            className="w-full bg-blue-500 text-white h-12 rounded-full"
           >
             <Text className="text-base font-medium">账号登录</Text>
           </Button>
           
           <Button
             onClick={() => openLogin('wechat')}
-            className={`w-full h-12 rounded-full ${agreePrivacy ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-500'}`}
-            disabled={!agreePrivacy}
+            className="w-full bg-green-500 text-white h-12 rounded-full"
           >
             <Text className="text-base font-medium">微信登录</Text>
           </Button>
         </View>
         
-        {/* 隐私政策勾选框 - 移到按钮下方 */}
+        {/* 隐私政策勾选框 - 单行布局 */}
         <View className="mt-4">
           <View 
-            className="flex flex-row items-start p-3 bg-gray-50 rounded-lg"
+            className="flex flex-row items-center p-3 bg-gray-50 rounded-lg"
             onClick={() => setAgreePrivacy(!agreePrivacy)}
           >
             <View 
-              className="w-5 h-5 border-2 border-gray-300 rounded flex items-center justify-center mr-2 mt-0.5"
+              className="w-5 h-5 border-2 border-gray-300 rounded flex items-center justify-center mr-2"
             >
               {agreePrivacy && (
                 <Text className="text-blue-500 text-sm">✓</Text>
               )}
             </View>
-            <View className="flex-1">
-              <Text className="text-xs text-gray-500 leading-5">
-                我已阅读并同意
-              </Text>
-              <View className="flex flex-row mt-1">
-                <View onClick={(e) => { e.stopPropagation(); Taro.navigateTo({ url: '/pages/login/agreement?type=service' }) }}>
-                  <Text className="text-xs text-blue-500">《用户服务协议》</Text>
-                </View>
-                <Text className="text-xs text-gray-500 mx-1">和</Text>
-                <View onClick={(e) => { e.stopPropagation(); Taro.navigateTo({ url: '/pages/login/agreement?type=privacy' }) }}>
-                  <Text className="text-xs text-blue-500">《隐私政策》</Text>
-                </View>
-              </View>
+            <Text className="text-xs text-gray-500 flex-shrink-0">我已阅读并同意</Text>
+            <View onClick={(e) => { e.stopPropagation(); Taro.navigateTo({ url: '/pages/login/agreement?type=service' }) }}>
+              <Text className="text-xs text-blue-500">《用户服务协议》</Text>
+            </View>
+            <Text className="text-xs text-gray-500">和</Text>
+            <View onClick={(e) => { e.stopPropagation(); Taro.navigateTo({ url: '/pages/login/agreement?type=privacy' }) }}>
+              <Text className="text-xs text-blue-500">《隐私政策》</Text>
             </View>
           </View>
         </View>
