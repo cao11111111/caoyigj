@@ -67,7 +67,7 @@ export default function Index() {
 
   const handleQuickAction = (action: typeof quickActions[0]) => {
     if (!isLoggedIn) {
-      setShowLogin(true)
+      Taro.showToast({ title: '请先登录', icon: 'none' })
       return
     }
     if (action.available) {

@@ -1,6 +1,6 @@
-import { Controller, Post, Body, Get, Query, Headers, Logger } from '@nestjs/common';
+import { Controller, Post, Body, Get, Headers, Logger } from '@nestjs/common';
 import { KnowledgeCardService } from './knowledge-card.service';
-import { supabase } from './storage/database/supabase-client';
+import { getSupabaseClient } from './storage/database/supabase-client';
 
 interface GenerateDto {
   userContent: string;
@@ -16,6 +16,8 @@ export class KnowledgeCardController {
   @Post('generate')
   async generate(@Body() dto: GenerateDto, @Headers('authorization') auth: string) {
     this.logger.log('Received request:', JSON.stringify(dto));
+    
+    const supabase = getSupabaseClient();
     
     // 从token获取用户ID
     let userId = 0;
@@ -61,7 +63,7 @@ export class KnowledgeCardController {
 
   @Get('test-db')
   async testDb() {
-    // 测试数据库连接
+    const supabase = getSupabaseClient();
     const { data, error } = await supabase
       .from('conversations')
       .select('*')

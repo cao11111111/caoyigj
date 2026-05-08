@@ -1,8 +1,10 @@
 import { useState } from 'react'
-import { View, Text, Input, Button } from '@tarojs/components'
+import { View, Text, Input } from '@tarojs/components'
 import { User, Lock, X, Eye, EyeOff } from 'lucide-react-taro'
 import Taro from '@tarojs/taro'
 import { Network } from '@/network'
+
+declare const wx: any
 
 interface LoginModalProps {
   show: boolean
@@ -66,7 +68,7 @@ export default function LoginModal({ show, onClose, onSuccess }: LoginModalProps
       // 小程序端获取真实code
       if (Taro.getEnv() === 'WEAPP') {
         const wechatRes = await new Promise((resolve, reject) => {
-          (wx as any).login({
+          wx.login({
             success: (res: any) => resolve(res.code),
             fail: reject
           })
@@ -144,7 +146,8 @@ export default function LoginModal({ show, onClose, onSuccess }: LoginModalProps
       alignItems: 'center',
       justifyContent: 'center',
       zIndex: 999,
-    }}>
+    }}
+    >
       <View style={{
         width: '85%',
         maxWidth: 360,
@@ -152,7 +155,8 @@ export default function LoginModal({ show, onClose, onSuccess }: LoginModalProps
         borderRadius: 16,
         padding: 24,
         position: 'relative',
-      }}>
+      }}
+      >
         {/* 关闭按钮 */}
         <View 
           onClick={onClose}
@@ -177,7 +181,8 @@ export default function LoginModal({ show, onClose, onSuccess }: LoginModalProps
           fontWeight: '600',
           color: '#1e293b',
           marginBottom: 20,
-        }}>
+        }}
+        >
           {needVerify ? '验证身份' : '用户登录'}
         </Text>
 
@@ -190,7 +195,8 @@ export default function LoginModal({ show, onClose, onSuccess }: LoginModalProps
               fontSize: 14,
               color: '#64748b',
               marginBottom: 16,
-            }}>
+            }}
+            >
               请输入验证码完成验证
             </Text>
             <View style={{
@@ -200,7 +206,8 @@ export default function LoginModal({ show, onClose, onSuccess }: LoginModalProps
               marginBottom: 16,
               display: 'flex',
               alignItems: 'center',
-            }}>
+            }}
+            >
               <Input
                 placeholder="请输入验证码"
                 value={verifyCode}
@@ -217,7 +224,8 @@ export default function LoginModal({ show, onClose, onSuccess }: LoginModalProps
               fontSize: 12,
               color: '#94a3b8',
               marginBottom: 16,
-            }}>
+            }}
+            >
               演示验证码：123456
             </Text>
             <View 
@@ -236,7 +244,8 @@ export default function LoginModal({ show, onClose, onSuccess }: LoginModalProps
                 color: '#ffffff',
                 fontSize: 16,
                 fontWeight: '500',
-              }}>
+              }}
+              >
                 {loading ? '验证中...' : '确认'}
               </Text>
             </View>
@@ -250,7 +259,8 @@ export default function LoginModal({ show, onClose, onSuccess }: LoginModalProps
               backgroundColor: '#f1f5f9',
               borderRadius: 10,
               padding: 4,
-            }}>
+            }}
+            >
               <View 
                 onClick={() => setLoginType('account')}
                 style={{
@@ -267,7 +277,8 @@ export default function LoginModal({ show, onClose, onSuccess }: LoginModalProps
                   fontSize: 14,
                   color: loginType === 'account' ? '#2563eb' : '#64748b',
                   fontWeight: loginType === 'account' ? '600' : '400',
-                }}>
+                }}
+                >
                   账号登录
                 </Text>
               </View>
@@ -287,7 +298,8 @@ export default function LoginModal({ show, onClose, onSuccess }: LoginModalProps
                   fontSize: 14,
                   color: loginType === 'wechat' ? '#2563eb' : '#64748b',
                   fontWeight: loginType === 'wechat' ? '600' : '400',
-                }}>
+                }}
+                >
                   微信登录
                 </Text>
               </View>
@@ -303,7 +315,8 @@ export default function LoginModal({ show, onClose, onSuccess }: LoginModalProps
                   marginBottom: 12,
                   display: 'flex',
                   alignItems: 'center',
-                }}>
+                }}
+                >
                   <User size={18} color="#64748b" />
                   <Input
                     placeholder="请输入账号"
@@ -323,10 +336,12 @@ export default function LoginModal({ show, onClose, onSuccess }: LoginModalProps
                   marginBottom: 16,
                   display: 'flex',
                   alignItems: 'center',
-                }}>
+                }}
+                >
                   <Lock size={18} color="#64748b" />
                   <Input
-                    type={showPassword ? 'text' : 'password'}
+                    type="text"
+                    password={!showPassword}
                     placeholder="请输入密码"
                     value={password}
                     onInput={(e: any) => setPassword(e.detail.value)}
@@ -365,7 +380,8 @@ export default function LoginModal({ show, onClose, onSuccess }: LoginModalProps
                     color: '#ffffff',
                     fontSize: 16,
                     fontWeight: '500',
-                  }}>
+                  }}
+                  >
                     {loading ? '登录中...' : '登录'}
                   </Text>
                 </View>
@@ -378,7 +394,8 @@ export default function LoginModal({ show, onClose, onSuccess }: LoginModalProps
                   flexDirection: 'column',
                   alignItems: 'center',
                   padding: '20px 0',
-                }}>
+                }}
+                >
                   <View style={{
                     width: 64,
                     height: 64,
@@ -388,14 +405,16 @@ export default function LoginModal({ show, onClose, onSuccess }: LoginModalProps
                     alignItems: 'center',
                     justifyContent: 'center',
                     marginBottom: 12,
-                  }}>
+                  }}
+                  >
                     <Text style={{ fontSize: 28, color: '#ffffff' }}>微</Text>
                   </View>
                   <Text style={{
                     fontSize: 14,
                     color: '#64748b',
                     textAlign: 'center',
-                  }}>
+                  }}
+                  >
                     点击下方按钮使用微信登录
                   </Text>
                 </View>
@@ -415,7 +434,8 @@ export default function LoginModal({ show, onClose, onSuccess }: LoginModalProps
                     color: '#ffffff',
                     fontSize: 16,
                     fontWeight: '500',
-                  }}>
+                  }}
+                  >
                     {loading ? '登录中...' : '微信一键登录'}
                   </Text>
                 </View>
@@ -432,7 +452,8 @@ export default function LoginModal({ show, onClose, onSuccess }: LoginModalProps
             color: '#ef4444',
             fontSize: 13,
             marginTop: 12,
-          }}>
+          }}
+          >
             {error}
           </Text>
         )}
@@ -445,7 +466,8 @@ export default function LoginModal({ show, onClose, onSuccess }: LoginModalProps
             fontSize: 11,
             color: '#94a3b8',
             marginTop: 16,
-          }}>
+          }}
+          >
             登录即表示同意《用户协议》和《隐私政策》
           </Text>
         )}

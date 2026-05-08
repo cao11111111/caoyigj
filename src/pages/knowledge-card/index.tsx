@@ -10,8 +10,7 @@ export default function KnowledgeCardInput() {
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const handleInput = (e: any) => {
-    const value = e.detail?.value ?? e.target?.value ?? ''
+  const handleInput = (value: string) => {
     setContent(value)
   }
 
@@ -95,7 +94,7 @@ export default function KnowledgeCardInput() {
                 style={{ minHeight: '320px' }}
                 placeholder="请输入要生成知识卡片的内容...\n\n例如：\n• 消防安全知识\n• 校园礼仪规范\n• 健康教育知识"
                 value={content}
-                onChange={(e: any) => handleInput({ target: { value: e.target.value } })}
+                onChange={(e: any) => handleInput(e.target.value)}
               />
             ) : (
               <Textarea
