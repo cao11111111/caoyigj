@@ -2,8 +2,10 @@ import { useState } from 'react'
 import { View, Text, Image } from '@tarojs/components'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { User } from 'lucide-react-taro'
 import Taro from '@tarojs/taro'
 import { Network } from '@/network'
+import { WechatAvatarButton } from '@/components/WechatAvatarButton'
 
 export default function LoginPage() {
   const [showLogin, setShowLogin] = useState(false)
@@ -431,36 +433,100 @@ export default function LoginPage() {
                     )}
 
                     {useWechatInfo ? (
-                      // 一键登录模式
-                      <Button
-                        onClick={handleWechatQuickLogin}
-                        className={`w-full h-12 rounded-full ${agreePrivacy ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-500'}`}
-                        disabled={!agreePrivacy || loading}
-                      >
-                        <Text className={`text-base font-medium ${agreePrivacy ? 'text-white' : 'text-gray-500'}`}>
-                          {loading ? '登录中...' : '微信一键登录'}
-                        </Text>
-                      </Button>
-                    ) : (
-                      // 手动选择模式
+                      // 一键登录模式 - 使用微信头像和昵称
                       <>
-                        {/* 头像选择 - 使用原生 Input */}
-                        <View
-                          className={`w-full h-12 rounded-full flex items-center justify-center relative ${agreePrivacy ? 'bg-green-500' : 'bg-gray-300'}`}
-                          onClick={() => {
-                            if (Taro.getEnv() === Taro.ENV_TYPE.WEAPP) {
-                              ;(Taro as any).chooseAvatar?.({
-                                success: (res: { avatarUrl: string }) => {
-                                  setWechatAvatar(res.avatarUrl)
-                                }
-                              })
-                            }
-                          }}
-                        >
-                          <View className="flex flex-row items-center">
-                            <Text className={`text-sm ${agreePrivacy ? 'text-white' : 'text-gray-500'}`}>
-                              {wechatAvatar ? '头像已选择' : '选择微信头像'}
+                        {/* 微信头像选择按钮 - 仅在微信小程序环境渲染 */}
+                        {typeof navigator !== 'undefined' && navigator.userAgent?.toLowerCase?.()?.includes('miniprogram') ? (
+                          <WechatAvatarButton
+                            avatar={wechatAvatar}
+                            agreePrivacy={agreePrivacy}
+                            loading={loading}
+                            onAvatarChange={setWechatAvatar}
+                          />
+                        ) : (
+                          <Button
+                            className={`w-full h-12 rounded-full mb-3 ${agreePrivacy ? 'bg-green-500' : 'bg-gray-300'}`}
+                            disabled
+                          >
+                            <Text className={`text-base font-medium ${agreePrivacy ? 'text-white' : 'text-gray-500'}`}>
+                              请在微信小程序中使用
                             </Text>
+                          </Button>
+                        )}
+                        
+                        {/* 昵称输入 */}
+                        <View className="bg-gray-50 rounded-xl px-4 py-3 mb-3">
+                          <Input
+                            type="nickname"
+                            className="w-full text-center"
+                            placeholder="点击获取微信昵称"
+                            value={wechatNickname}
+                            onInput={(e: any) => setWechatNickname(e.detail?.value || e.target?.value || '')}
+                          />
+                        </View>
+                        
+                        <Button
+                          onClick={handleWechatQuickLogin}
+                          className={`w-full h-12 rounded-full ${agreePrivacy && wechatAvatar && wechatNickname ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-500'}`}
+                          disabled={!agreePrivacy || !wechatAvatar || !wechatNickname || loading}
+                        >
+                          <Text className={`text-base font-medium ${agreePrivacy && wechatAvatar && wechatNickname ? 'text-white' : 'text-gray-500'}`}>
+                            {loading ? '登录中...' : '确认登录'}
+                          </Text>
+                        </Button>
+                      </>
+                    ) : (
+                      // 手动选择模式 - 支持选择微信头像或上传本地图片
+                      <>
+                        {/* 头像选择区域 */}
+                        <View className="flex flex-row items-center justify-center mb-3">
+                          {/* 当前头像预览 */}
+                          <View className="w-20 h-20 rounded-full bg-gray-100 overflow-hidden flex items-center justify-center mr-4">
+                            {wechatAvatar ? (
+                              <Image src={wechatAvatar} className="w-full h-full" mode="aspectFill" />
+                            ) : (
+                              <User className="text-gray-400" size={40} color="#9ca3af" />
+                            )}
+                          </View>
+                          
+                          {/* 头像操作按钮组 */}
+                          <View className="flex flex-col space-y-2">
+                            <Button
+                              size="sm"
+                              className={`px-4 ${agreePrivacy ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-500'}`}
+                              disabled={!agreePrivacy}
+                              onClick={() => {
+                                if (Taro.getEnv() === Taro.ENV_TYPE.WEAPP) {
+                                  ;(Taro as any).chooseAvatar?.({
+                                    success: (res: { avatarUrl: string }) => {
+                                      setWechatAvatar(res.avatarUrl)
+                                    }
+                                  })
+                                }
+                              }}
+                            >
+                              <Text className={`text-xs ${agreePrivacy ? 'text-white' : 'text-gray-500'}`}>选择微信头像</Text>
+                            </Button>
+                            
+                            <Button
+                              size="sm"
+                              className={`px-4 ${agreePrivacy ? 'bg-gray-500 text-white' : 'bg-gray-300 text-gray-500'}`}
+                              disabled={!agreePrivacy}
+                              onClick={() => {
+                                Taro.chooseImage({
+                                  count: 1,
+                                  sizeType: ['compressed'],
+                                  sourceType: ['album'],
+                                  success: (res) => {
+                                    if (res.tempFilePaths.length > 0) {
+                                      setWechatAvatar(res.tempFilePaths[0])
+                                    }
+                                  }
+                                })
+                              }}
+                            >
+                              <Text className={`text-xs ${agreePrivacy ? 'text-white' : 'text-gray-500'}`}>上传本地图片</Text>
+                            </Button>
                           </View>
                         </View>
                         
