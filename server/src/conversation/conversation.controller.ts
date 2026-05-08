@@ -1,8 +1,6 @@
 import { Controller, Get, Post, Body, Query, Headers } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/common';
-import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { getSupabaseClient } from '../storage/database/supabase-client';
 
-@ApiTags('对话')
 @Controller('conversations')
 export class ConversationController {
   private getClient() {
@@ -25,7 +23,6 @@ export class ConversationController {
   }
 
   @Post('save')
-  @ApiOperation({ summary: '保存对话' })
   async saveConversation(
     @Body() body: { type: string; title: string; preview?: string; imageUrl?: string; token?: string },
     @Headers('authorization') auth: string
@@ -69,7 +66,6 @@ export class ConversationController {
   }
 
   @Get('recent')
-  @ApiOperation({ summary: '获取最近对话' })
   async getRecentConversations(
     @Query('limit') limit: string = '5',
     @Headers('authorization') auth: string
@@ -117,7 +113,6 @@ export class ConversationController {
   }
 
   @Get('history')
-  @ApiOperation({ summary: '获取历史记录' })
   async getHistory(
     @Query('page') page: string = '1',
     @Query('pageSize') pageSize: string = '10',
@@ -185,7 +180,6 @@ export class ConversationController {
   }
 
   @Get('stats')
-  @ApiOperation({ summary: '获取统计数据' })
   async getStats(@Headers('authorization') auth: string) {
     const client = this.getClient();
     const token = auth?.replace('Bearer ', '');

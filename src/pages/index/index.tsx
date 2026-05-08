@@ -222,6 +222,9 @@ export default function Index() {
           </View>
         </View>
       )}
+
+      {/* 登录弹窗 */}
+      <LoginModal show={showLogin} onClose={() => setShowLogin(false)} />
     </View>
   )
 }

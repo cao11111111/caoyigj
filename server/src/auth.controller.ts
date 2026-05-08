@@ -1,6 +1,5 @@
 import { Controller, Post, Body, Get, Headers } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/common';
-import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { getSupabaseClient } from './storage/database/supabase-client';
 
 interface LoginDto {
   username: string;
@@ -32,7 +31,6 @@ interface UseQuotaDto {
 
 const VALID_VERIFY_CODE = '123456';
 
-@ApiTags('认证')
 @Controller('auth')
 export class AuthController {
   // 获取 Supabase 客户端
@@ -41,7 +39,6 @@ export class AuthController {
   }
 
   @Post('login')
-  @ApiOperation({ summary: '用户登录' })
   async login(@Body() body: LoginDto) {
     console.log('登录请求:', body);
     const client = this.getClient();
@@ -184,7 +181,6 @@ export class AuthController {
   }
 
   @Post('wechat-login')
-  @ApiOperation({ summary: '微信登录' })
   async wechatLogin(@Body() body: WechatLoginDto) {
     console.log('微信登录请求, code:', body.code);
     const client = this.getClient();
@@ -310,7 +306,6 @@ export class AuthController {
   }
 
   @Post('verify')
-  @ApiOperation({ summary: '验证码验证' })
   async verify(@Body() body: VerifyDto) {
     console.log('验证请求:', body);
     const client = this.getClient();
@@ -377,7 +372,6 @@ export class AuthController {
   }
 
   @Post('logout')
-  @ApiOperation({ summary: '用户登出' })
   async logout(@Headers('authorization') auth: string) {
     const client = this.getClient();
     const token = auth?.replace('Bearer ', '');
@@ -398,7 +392,6 @@ export class AuthController {
 }
 
 // 用户信息控制器
-@ApiTags('用户')
 @Controller('user')
 export class UserController {
   private getClient() {
@@ -406,7 +399,6 @@ export class UserController {
   }
 
   @Post('profile')
-  @ApiOperation({ summary: '保存用户信息' })
   async saveProfile(@Body() body: ProfileDto & { token?: string }) {
     console.log('保存用户信息:', body);
     const client = this.getClient();
@@ -468,7 +460,6 @@ export class UserController {
   }
 
   @Get('info')
-  @ApiOperation({ summary: '获取用户信息' })
   async getUserInfo(@Headers('authorization') auth: string) {
     const client = this.getClient();
     const token = auth?.replace('Bearer ', '');
@@ -532,7 +523,6 @@ export class UserController {
   }
 
   @Get('quota')
-  @ApiOperation({ summary: '获取用户额度' })
   async getQuota(@Headers('authorization') auth: string) {
     const client = this.getClient();
     const token = auth?.replace('Bearer ', '');
@@ -575,7 +565,6 @@ export class UserController {
   }
 
   @Post('watch-ad')
-  @ApiOperation({ summary: '观看广告增加额度' })
   async watchAd(@Body() body: WatchAdDto) {
     const client = this.getClient();
     const { token } = body;
@@ -632,7 +621,6 @@ export class UserController {
   }
 
   @Post('use-quota')
-  @ApiOperation({ summary: '使用额度' })
   async useQuota(@Body() body: UseQuotaDto) {
     const client = this.getClient();
     const { token } = body;
