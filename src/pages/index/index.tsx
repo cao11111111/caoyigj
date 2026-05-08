@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react'
 import Taro from '@tarojs/taro'
 import { BookOpen, Construction, Sparkles, Clock } from 'lucide-react-taro'
 import { Network } from '@/network'
-import LoginModal from '@/components/login-modal'
 import './index.config'
 
 interface RecentChat {
@@ -25,7 +24,6 @@ interface UserInfo {
 export default function Index() {
   const [userInfo, setUserInfo] = useState<UserInfo>({ name: '用户', avatar: '', totalCards: 0, totalChats: 0 })
   const [recentChats, setRecentChats] = useState<RecentChat[]>([])
-  const [showLogin, setShowLogin] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
 
   useEffect(() => {
@@ -104,7 +102,7 @@ export default function Index() {
           </Text>
           <View 
             className="bg-blue-500 rounded-xl py-3 text-center"
-            onClick={() => setShowLogin(true)}
+            onClick={() => Taro.navigateTo({ url: '/pages/login/index' })}
           >
             <Text className="text-white font-medium">立即登录</Text>
           </View>
@@ -230,15 +228,6 @@ export default function Index() {
   return (
     <View>
       {isLoggedIn ? loggedInView : unLoggedInView}
-      <LoginModal 
-        show={showLogin} 
-        onClose={() => setShowLogin(false)}
-        onSuccess={() => {
-          setIsLoggedIn(true)
-          setShowLogin(false)
-          fetchData()
-        }}
-      />
     </View>
   )
 }
