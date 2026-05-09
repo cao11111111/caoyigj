@@ -1,5 +1,6 @@
 import { Controller, Post, Body, Get, Headers } from '@nestjs/common';
 import { getSupabaseClient } from './storage/database/supabase-client';
+import axios from 'axios';
 
 interface LoginDto {
   username: string;
@@ -188,68 +189,48 @@ export class AuthController {
     const client = this.getClient();
     
     try {
-      // 演示模式：使用 code 模拟 openid
-      const openid = `mock_openid_${body.code}`;
+      // 从环境变量获取微信配置
+      const appId = process.env.WX_APP_ID;
+      const secret = process.env.WX_APP_SECRET;
       
-      // 模拟判断是否为新用户（演示：code 长度 < 20 为新用户）
-      const isNewUser = body.code.length < 20;
-      
-      if (isNewUser) {
-        const tempToken = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        
-        // 创建临时微信用户
-        const { data: tempUser, error: tempError } = await client
-          .from('users')
-          .insert({
-            username: `wechat_${openid}`,
-            password: 'wechat_oauth', // 微信登录用户密码
-            token: tempToken,
-            nickname: '微信用户',
-            quota: 10, // 新用户默认10次额度
-          })
-          .select()
-          .single();
-        
-        if (tempError) {
-          console.error('创建微信用户失败:', tempError);
-          throw new Error(`创建微信用户失败: ${tempError.message}`);
-        }
-        
-        return {
-          code: 200,
-          msg: '需要验证',
-          data: {
-            needVerify: true,
-            tempToken: tempUser.token,
-            userId: tempUser.id,
-          },
-        };
+      if (!appId || !secret) {
+        throw new Error('微信配置缺失：请在 .env 中配置 WX_APP_ID 和 WX_APP_SECRET');
       }
       
-      // 老用户直接登录
-      const token = `token_${Date.now()}_${openid}`;
+      // 调用微信 API 换取 openid
+      const wxUrl = `https://api.weixin.qq.com/sns/jscode2session?appid=${appId}&secret=${secret}&js_code=${body.code}&grant_type=authorization_code`;
+      const wxResponse = await axios.get(wxUrl);
+      const { openid, session_key, errcode, errmsg } = wxResponse.data;
       
-      // 查找或创建微信用户
-      const { data: existingWxUser, error: findError } = await client
+      if (errcode) {
+        throw new Error(`微信登录失败: ${errmsg}`);
+      }
+      
+      console.log('微信 API 返回 openid:', openid);
+      
+      // 使用 openid 查找用户
+      const { data: existingUser, error: findError } = await client
         .from('users')
         .select('*')
         .eq('username', `wechat_${openid}`)
         .maybeSingle();
       
       if (findError) {
-        console.error('查询微信用户失败:', findError);
+        console.error('查询用户失败:', findError);
       }
       
-      if (existingWxUser) {
-        // 更新 token 和头像昵称（如果传入）
-        const updateData: any = { token };
+      const token = `token_${Date.now()}_${openid.substring(0, 8)}`;
+      
+      if (existingUser) {
+        // 老用户：更新 token 和头像昵称
+        const updateData: any = { token, session_key };
         if (body.avatar) updateData.avatar = body.avatar;
         if (body.nickname) updateData.nickname = body.nickname;
         
         await client
           .from('users')
           .update(updateData)
-          .eq('id', existingWxUser.id);
+          .eq('id', existingUser.id);
         
         return {
           code: 200,
@@ -258,24 +239,29 @@ export class AuthController {
             needVerify: false,
             token,
             user: {
-              id: existingWxUser.id,
-              username: existingWxUser.username,
-              nickname: existingWxUser.nickname,
-              school: existingWxUser.school,
-              subject: existingWxUser.subject,
-              avatar: existingWxUser.avatar,
-              quota: existingWxUser.quota || 0,
+              id: existingUser.id,
+              username: existingUser.username,
+              nickname: existingUser.nickname,
+              school: existingUser.school || '',
+              subject: existingUser.subject || '',
+              avatar: existingUser.avatar || '',
+              quota: existingUser.quota || 0,
             },
           },
         };
       }
       
-      const { data: newWxUser, error: insertError } = await client
+      // 新用户：创建临时用户，需要验证
+      const tempToken = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      const { data: newUser, error: insertError } = await client
         .from('users')
         .insert({
           username: `wechat_${openid}`,
-          password: 'wechat_oauth', // 微信登录用户密码
-          token,
+          password: 'wechat_oauth',
+          token: tempToken,
+          openid,
+          session_key,
           nickname: body.nickname || '微信用户',
           avatar: body.avatar || null,
           quota: 10, // 新用户默认10次额度
@@ -290,26 +276,18 @@ export class AuthController {
       
       return {
         code: 200,
-        msg: '登录成功',
+        msg: '需要验证',
         data: {
-          needVerify: false,
-          token,
-          user: {
-            id: newWxUser.id,
-            username: newWxUser.username,
-            nickname: newWxUser.nickname,
-            school: newWxUser.school,
-            subject: newWxUser.subject,
-            avatar: newWxUser.avatar,
-            quota: newWxUser.quota,
-          },
+          needVerify: true,
+          tempToken: newUser.token,
+          userId: newUser.id,
         },
       };
-    } catch (err) {
+    } catch (err: any) {
       console.error('微信登录失败:', err);
       return {
         code: 500,
-        msg: '微信登录失败',
+        msg: err.message || '微信登录失败',
         data: null,
       };
     }
