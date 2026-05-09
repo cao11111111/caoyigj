@@ -46,10 +46,10 @@ export default function LoginPage() {
           setNeedVerify(true)
         } else {
           Taro.setStorageSync('token', res.data.data.token)
-          Taro.setStorageSync('userInfo', res.data.data.userInfo)
+          const user = res.data.data.user
+          Taro.setStorageSync('userInfo', user)
           // 检查是否需要填写个人信息
-          const userInfo = res.data.data.userInfo
-          if (!userInfo?.nickname) {
+          if (!user?.nickname) {
             Taro.navigateTo({ url: '/pages/login/profile' })
           } else {
             Taro.switchTab({ url: '/pages/index/index' })
@@ -253,10 +253,10 @@ export default function LoginPage() {
       
       if (res.data.code === 200) {
         Taro.setStorageSync('token', res.data.data.token)
-        Taro.setStorageSync('userInfo', res.data.data.userInfo)
+        const user = res.data.data.user
+        Taro.setStorageSync('userInfo', user)
         // 检查是否需要填写个人信息
-        const userInfo = res.data.data.userInfo
-        if (!userInfo?.nickname) {
+        if (!user?.nickname) {
           Taro.navigateTo({ url: '/pages/login/profile' })
         } else {
           Taro.switchTab({ url: '/pages/index/index' })

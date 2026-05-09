@@ -23,10 +23,14 @@ export class UserController {
   }
 
   @Post('profile')
-  async saveProfile(@Body() body: ProfileDto) {
+  async saveProfile(
+    @Headers('authorization') authHeader: string,
+    @Body() body: ProfileDto
+  ) {
     console.log('保存用户信息:', body);
     const client = this.getClient();
-    const token = body.token;
+    // 从 Authorization header 中提取 token
+    const token = authHeader?.replace('Bearer ', '');
     
     if (!token) {
       return {
