@@ -100,8 +100,8 @@ export default function LoginPage() {
             setNeedVerify(true)
           } else {
             Taro.setStorageSync('token', res.data.data.token)
-            Taro.setStorageSync('userInfo', res.data.data.userInfo)
-            const userInfo = res.data.data.userInfo
+            Taro.setStorageSync('userInfo', res.data.data.user)
+            const userInfo = res.data.data.user
             if (!userInfo?.nickname) {
               Taro.navigateTo({ url: '/pages/login/profile' })
             } else {
@@ -161,8 +161,8 @@ export default function LoginPage() {
             setNeedVerify(true)
           } else {
             Taro.setStorageSync('token', res.data.data.token)
-            Taro.setStorageSync('userInfo', res.data.data.userInfo)
-            const userInfo = res.data.data.userInfo
+            Taro.setStorageSync('userInfo', res.data.data.user)
+            const userInfo = res.data.data.user
             closeLogin()
             if (!userInfo?.nickname || userInfo.nickname === '微信用户') {
               Taro.navigateTo({ url: '/pages/login/profile' })
@@ -217,9 +217,9 @@ export default function LoginPage() {
           setNeedVerify(true)
         } else {
           Taro.setStorageSync('token', res.data.data.token)
-          Taro.setStorageSync('userInfo', res.data.data.userInfo)
+          Taro.setStorageSync('userInfo', res.data.data.user)
           // 检查是否需要填写个人信息
-          const userInfo = res.data.data.userInfo
+          const userInfo = res.data.data.user
           if (!userInfo?.nickname) {
             Taro.navigateTo({ url: '/pages/login/profile' })
           } else {
