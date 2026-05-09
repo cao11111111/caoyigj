@@ -193,20 +193,25 @@ export class AuthController {
       const appId = process.env.WX_APP_ID;
       const secret = process.env.WX_APP_SECRET;
       
+      let openid: string;
+      
       if (!appId || !secret) {
-        throw new Error('微信配置缺失：请在 .env 中配置 WX_APP_ID 和 WX_APP_SECRET');
+        // Mock 模式：测试环境使用 code 作为 openid
+        console.log('微信配置缺失，使用 Mock 模式');
+        openid = `mock_openid_${body.code}`;
+      } else {
+        // 调用微信 API 换取 openid
+        const wxUrl = `https://api.weixin.qq.com/sns/jscode2session?appid=${appId}&secret=${secret}&js_code=${body.code}&grant_type=authorization_code`;
+        const wxResponse = await axios.get(wxUrl);
+        const { openid: wxOpenid, session_key, errcode, errmsg } = wxResponse.data;
+        
+        if (errcode) {
+          throw new Error(`微信登录失败: ${errmsg}`);
+        }
+        
+        openid = wxOpenid;
+        console.log('微信 API 返回 openid:', openid);
       }
-      
-      // 调用微信 API 换取 openid
-      const wxUrl = `https://api.weixin.qq.com/sns/jscode2session?appid=${appId}&secret=${secret}&js_code=${body.code}&grant_type=authorization_code`;
-      const wxResponse = await axios.get(wxUrl);
-      const { openid, session_key, errcode, errmsg } = wxResponse.data;
-      
-      if (errcode) {
-        throw new Error(`微信登录失败: ${errmsg}`);
-      }
-      
-      console.log('微信 API 返回 openid:', openid);
       
       // 使用 openid 查找用户
       const { data: existingUser, error: findError } = await client
@@ -223,7 +228,7 @@ export class AuthController {
       
       if (existingUser) {
         // 老用户：更新 token 和头像昵称
-        const updateData: any = { token, session_key };
+        const updateData: any = { token };
         if (body.avatar) updateData.avatar = body.avatar;
         if (body.nickname) updateData.nickname = body.nickname;
         
@@ -261,7 +266,6 @@ export class AuthController {
           password: 'wechat_oauth',
           token: tempToken,
           openid,
-          session_key,
           nickname: body.nickname || '微信用户',
           avatar: body.avatar || null,
           quota: 10, // 新用户默认10次额度
